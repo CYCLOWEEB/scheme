@@ -1,0 +1,10 @@
+{
+  "name": "Independent Scheme Planning Aid",
+  "description": "Explore source-linked concessional credit schemes, repayment estimates, and official application links.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

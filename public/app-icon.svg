@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#D6E5F1"/>
+  <!-- Concentric Rings -->
+  <circle cx="256" cy="256" r="248" fill="#A0C0E4"/>
+  <circle cx="256" cy="256" r="208" fill="#6289CA"/>
+  <circle cx="256" cy="256" r="166" fill="#446CB8"/>
+  <circle cx="256" cy="256" r="132" fill="#284478"/>
+  <!-- White specular / dots -->
+  <circle cx="192" cy="192" r="55" fill="#FFFFFF"/>
+  <circle cx="284" cy="284" r="28" fill="#FFFFFF"/>
+</svg>
