@@ -20,30 +20,39 @@ function calculateInstallment(principal: number, annualRate: number, months: num
   return Math.round((principal * rate * growth) / (growth - 1));
 }
 
+const CALCULATOR_SCHEMES = SCHEMES_DATABASE.filter(scheme =>
+  scheme.maxLoanAmount !== undefined
+  && scheme.maxLoanPercentage !== undefined
+  && scheme.concessionalInterestRate !== undefined
+  && scheme.repaymentTenureYears !== undefined,
+);
+
 export default function FinancialCalculator({
   preselectedSchemeId = 'nsfdc-tls',
   preselectedProjectCost,
   preselectedOwnContribution,
   onSelectLocator,
 }: FinancialCalculatorProps) {
-  const initialScheme = SCHEMES_DATABASE.find(scheme => scheme.id === preselectedSchemeId) ?? SCHEMES_DATABASE[0];
+  const initialScheme = CALCULATOR_SCHEMES.find(scheme => scheme.id === preselectedSchemeId)
+    ?? CALCULATOR_SCHEMES.find(scheme => scheme.id === 'nsfdc-tls')
+    ?? CALCULATOR_SCHEMES[0];
   const initialCost = preselectedProjectCost && preselectedProjectCost > 0
     ? preselectedProjectCost
     : Math.min(initialScheme.maxProjectCost ?? 500000, 500000);
 
   const [selectedSchemeId, setSelectedSchemeId] = useState(initialScheme.id);
   const [projectCost, setProjectCost] = useState(initialCost);
-  const [loanPercentage, setLoanPercentage] = useState(initialScheme.maxLoanPercentage);
-  const [interestRate, setInterestRate] = useState(initialScheme.concessionalInterestRate);
-  const [tenureYears, setTenureYears] = useState(initialScheme.repaymentTenureYears);
-  const [moratoriumMonths, setMoratoriumMonths] = useState(initialScheme.moratoriumPeriodMonths);
+  const [loanPercentage, setLoanPercentage] = useState(initialScheme.maxLoanPercentage ?? 0);
+  const [interestRate, setInterestRate] = useState(initialScheme.concessionalInterestRate ?? 0);
+  const [tenureYears, setTenureYears] = useState(initialScheme.repaymentTenureYears ?? 1);
+  const [moratoriumMonths, setMoratoriumMonths] = useState(initialScheme.moratoriumPeriodMonths ?? 0);
   const [otherFunding, setOtherFunding] = useState(0);
   const [ownContribution, setOwnContribution] = useState(Math.min(initialCost, Math.max(0, preselectedOwnContribution ?? 0)));
   const [comparisonRate, setComparisonRate] = useState('');
 
   const selectedScheme = useMemo(
-    () => SCHEMES_DATABASE.find(scheme => scheme.id === selectedSchemeId) ?? SCHEMES_DATABASE[0],
-    [selectedSchemeId],
+    () => CALCULATOR_SCHEMES.find(scheme => scheme.id === selectedSchemeId) ?? initialScheme,
+    [initialScheme, selectedSchemeId],
   );
   const projectCostWarning = selectedScheme.minProjectCost !== undefined && projectCost < selectedScheme.minProjectCost
     ? `This project is below the published minimum of ${formatINR(selectedScheme.minProjectCost)}.`
@@ -52,14 +61,14 @@ export default function FinancialCalculator({
       : '';
 
   const handleSchemeChange = (schemeId: string) => {
-    const nextScheme = SCHEMES_DATABASE.find(scheme => scheme.id === schemeId);
+    const nextScheme = CALCULATOR_SCHEMES.find(scheme => scheme.id === schemeId);
     if (!nextScheme) return;
     setSelectedSchemeId(schemeId);
     setProjectCost(Math.min(nextScheme.maxProjectCost ?? 500000, 500000));
-    setLoanPercentage(nextScheme.maxLoanPercentage);
-    setInterestRate(nextScheme.concessionalInterestRate);
-    setTenureYears(nextScheme.repaymentTenureYears);
-    setMoratoriumMonths(nextScheme.moratoriumPeriodMonths);
+    setLoanPercentage(nextScheme.maxLoanPercentage ?? 0);
+    setInterestRate(nextScheme.concessionalInterestRate ?? 0);
+    setTenureYears(nextScheme.repaymentTenureYears ?? 1);
+    setMoratoriumMonths(nextScheme.moratoriumPeriodMonths ?? 0);
     setOtherFunding(0);
     setOwnContribution(0);
     setComparisonRate('');
@@ -68,7 +77,7 @@ export default function FinancialCalculator({
   const appliedOtherFunding = Math.min(projectCost, Math.max(0, otherFunding));
   const appliedOwnContribution = Math.min(projectCost, Math.max(0, ownContribution));
   const calculatedLoanAmount = Math.min(
-    selectedScheme.maxLoanAmount,
+    selectedScheme.maxLoanAmount ?? 0,
     projectCost * loanPercentage / 100,
     Math.max(0, projectCost - appliedOtherFunding),
   );
@@ -120,7 +129,7 @@ export default function FinancialCalculator({
         <div className="min-w-[260px] rounded-xl border border-slate-200 bg-slate-50 p-3">
           <label htmlFor="calc-scheme-select" className="mb-1 block text-[11px] font-bold uppercase text-slate-600">Scheme</label>
           <select id="calc-scheme-select" value={selectedSchemeId} onChange={event => handleSchemeChange(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-sky-500">
-            {SCHEMES_DATABASE.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}
+            {CALCULATOR_SCHEMES.map(scheme => <option key={scheme.id} value={scheme.id}>{scheme.name}</option>)}
           </select>
         </div>
       </section>
@@ -139,8 +148,8 @@ export default function FinancialCalculator({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="calc-loan-share" className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-700"><span>Loan share of project</span><b className="font-mono text-sky-700">{loanPercentage}%</b></label>
-              <input id="calc-loan-share" type="range" min="0" max={selectedScheme.maxLoanPercentage} step="5" value={loanPercentage} onChange={event => setLoanPercentage(Number(event.target.value))} className="w-full accent-sky-600" />
-              <p className="mt-1 text-[10px] text-slate-500">Scheme maximum: {selectedScheme.maxLoanPercentage}%</p>
+              <input id="calc-loan-share" type="range" min="0" max={selectedScheme.maxLoanPercentage ?? 0} step="5" value={loanPercentage} onChange={event => setLoanPercentage(Number(event.target.value))} className="w-full accent-sky-600" />
+              <p className="mt-1 text-[10px] text-slate-500">Scheme maximum: {selectedScheme.maxLoanPercentage ?? 0}%</p>
             </div>
             <div>
               <label htmlFor="calc-other-funding" className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-700"><span>Other confirmed non-repayable funding</span><b className="font-mono text-amber-700">{formatINR(appliedOtherFunding)}</b></label>
@@ -158,19 +167,19 @@ export default function FinancialCalculator({
             <div>
               <label htmlFor="calc-rate" className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-700"><span>Annual interest rate</span><b className="font-mono text-sky-700">{interestRate}%</b></label>
               <input id="calc-rate" type="range" min="0" max="30" step="0.25" value={interestRate} onChange={event => setInterestRate(Number(event.target.value))} className="w-full accent-sky-600" />
-              <p className="mt-1 text-[10px] text-slate-500">Published figure: {selectedScheme.interestRateLabel ?? `${selectedScheme.concessionalInterestRate}%`} p.a. {selectedScheme.interestRateNote}</p>
+              <p className="mt-1 text-[10px] text-slate-500">Published figure: {selectedScheme.interestRateLabel ?? `${selectedScheme.concessionalInterestRate ?? 0}%`} p.a. {selectedScheme.interestRateNote}</p>
             </div>
             <div>
               <label htmlFor="calc-tenure" className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-700"><span>Total term</span><b className="font-mono text-slate-900">{tenureYears} years</b></label>
-              <input id="calc-tenure" type="range" min="1" max={Math.max(1, selectedScheme.repaymentTenureYears)} step="1" value={tenureYears} onChange={event => setTenureYears(Number(event.target.value))} className="w-full accent-sky-600" />
-              <p className="mt-1 text-[10px] text-slate-500">Published term: {selectedScheme.repaymentTerms ?? `${selectedScheme.repaymentTenureYears} years`}</p>
+              <input id="calc-tenure" type="range" min="1" max={Math.max(1, selectedScheme.repaymentTenureYears ?? 1)} step="1" value={tenureYears} onChange={event => setTenureYears(Number(event.target.value))} className="w-full accent-sky-600" />
+              <p className="mt-1 text-[10px] text-slate-500">Published term: {selectedScheme.repaymentTerms ?? `${selectedScheme.repaymentTenureYears ?? 1} years`}</p>
             </div>
           </div>
 
           <div>
             <label htmlFor="calc-moratorium" className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-700"><span><Clock className="mr-1 inline h-3.5 w-3.5 text-amber-600" />Modeled moratorium</span><b className="font-mono text-amber-800">{graceMonths} months</b></label>
-            <input id="calc-moratorium" type="range" min="0" max={Math.min(60, totalMonths - 1)} step="1" value={graceMonths} onChange={event => setMoratoriumMonths(Number(event.target.value))} className="w-full accent-amber-600" />
-            <p className="mt-1 text-[10px] text-slate-500">Published term: {selectedScheme.moratoriumTerms ?? `${selectedScheme.moratoriumPeriodMonths} months`}</p>
+              <input id="calc-moratorium" type="range" min="0" max={Math.min(60, totalMonths - 1)} step="1" value={graceMonths} onChange={event => setMoratoriumMonths(Number(event.target.value))} className="w-full accent-amber-600" />
+            <p className="mt-1 text-[10px] text-slate-500">Published term: {selectedScheme.moratoriumTerms ?? `${selectedScheme.moratoriumPeriodMonths ?? 0} months`}</p>
           </div>
 
           <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs sm:grid-cols-2">

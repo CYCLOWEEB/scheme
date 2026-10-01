@@ -9,21 +9,21 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Scheme Guide | Independent Scheme Planning Aid',
-  description: 'Explore selected concessional credit schemes, estimate repayments, and follow official application links.',
+  title: 'Scheme Lens | Independent Scheme Planning Aid',
+  description: 'Explore selected government loans, subsidies, guarantees, and business support programmes. Compare loan estimates where terms are published and follow official scheme links.',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
   },
   openGraph: {
-    title: 'Scheme Guide | Independent Scheme Planning Aid',
-    description: 'Explore selected concessional credit schemes, estimate repayments, and follow official application links.',
+    title: 'Scheme Lens | Independent Scheme Planning Aid',
+    description: 'Explore selected government loans, subsidies, guarantees, and business support programmes. Compare loan estimates where terms are published and follow official scheme links.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Scheme Guide | Independent Scheme Planning Aid',
-    description: 'AI-driven scheme recommender and concessional credit portal - Scheme for your benefit.',
+    title: 'Scheme Lens | Independent Scheme Planning Aid',
+    description: 'Explore selected government loans, subsidies, guarantees, and business support programmes. Compare loan estimates where terms are published and follow official scheme links.',
   },
 };
 

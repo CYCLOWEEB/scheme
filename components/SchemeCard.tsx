@@ -33,6 +33,15 @@ export default function SchemeCard({
   onAskAi
 }: SchemeCardProps) {
   const { scheme, matchScore, matchReasons, caveats, recommendedLoanAmount, estimatedMonthlyEmi } = result;
+  const canShowLoanEstimate = recommendedLoanAmount !== undefined && estimatedMonthlyEmi !== undefined;
+  const programType = scheme.programType ?? 'direct_loan';
+  const canShowNsfDcDirectory = scheme.corporation === 'NSFDC' && scheme.channelPartnerTypes.length > 0;
+  const programLabels = {
+    direct_loan: 'Loan',
+    credit_guarantee: 'Credit guarantee',
+    credit_linked_subsidy: 'Credit-linked subsidy',
+    business_support: 'Business support',
+  } as const;
 
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'bg-sky-600 text-white';
@@ -44,7 +53,7 @@ export default function SchemeCard({
   return (
     <div 
       id={`scheme-card-${scheme.id}`}
-      className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between"
+      className="lift-on-hover bg-white rounded-xl border border-slate-200 shadow-xs hover:border-sky-200 overflow-hidden flex flex-col justify-between"
     >
       <div>
         {/* Card Header with Corporation & Match Score */}
@@ -54,6 +63,9 @@ export default function SchemeCard({
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-sky-100 text-sky-800 border border-sky-200">
                   {scheme.corporation}
+                </span>
+                <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100">
+                  {programLabels[programType]}
                 </span>
                 <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-700">
                   {scheme.categoryTag}
@@ -78,44 +90,40 @@ export default function SchemeCard({
           </div>
         </div>
 
-        {/* Financial Highlights Pill Grid */}
-        <div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/70 border-b border-slate-100 text-center py-3 px-2">
-          <div>
-            <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
-              <Percent className="w-3 h-3 text-sky-600" /> Concessional Rate
-            </span>
-            <p className="text-sm font-extrabold text-sky-700 mt-0.5">
-              {scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} <span className="text-[10px] font-normal text-slate-500">p.a.</span>
-            </p>
-            {scheme.interestRateNote && <p className="text-[10px] text-slate-500 mt-0.5">{scheme.interestRateNote}</p>}
+        {/* Scheme terms adapt to loans, guarantees, subsidies, and business support. */}
+        {scheme.maxLoanPercentage !== undefined && scheme.maxLoanAmount !== undefined
+          && scheme.concessionalInterestRate !== undefined && scheme.repaymentTenureYears !== undefined ? (
+          <div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/70 border-b border-slate-100 text-center py-3 px-2">
+            <div>
+              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Percent className="w-3 h-3 text-sky-600" /> Concessional Rate</span>
+              <p className="text-sm font-extrabold text-sky-700 mt-0.5">{scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} <span className="text-[10px] font-normal text-slate-500">p.a.</span></p>
+              {scheme.interestRateNote && <p className="text-[10px] text-slate-500 mt-0.5">{scheme.interestRateNote}</p>}
+            </div>
+            <div>
+              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Wallet className="w-3 h-3 text-indigo-600" /> Max Loan Limit</span>
+              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatINR(scheme.maxLoanAmount)}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Up to {scheme.maxLoanPercentage}% project</p>
+            </div>
+            <div>
+              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Clock className="w-3 h-3 text-amber-600" /> Moratorium</span>
+              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{scheme.moratoriumTerms ?? `${scheme.moratoriumPeriodMonths ?? 0} Months`}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Tenure: {scheme.repaymentTenureYears} Years</p>
+            </div>
           </div>
-
-          <div>
-            <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
-              <Wallet className="w-3 h-3 text-indigo-600" /> Max Loan Limit
-            </span>
-            <p className="text-sm font-extrabold text-slate-900 mt-0.5">
-              {formatINR(scheme.maxLoanAmount)}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Up to {scheme.maxLoanPercentage}% project
-            </p>
+        ) : scheme.financialHighlights?.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-slate-50/70 border-b border-slate-100 py-3 px-3">
+            {scheme.financialHighlights.map(item => (
+              <div key={item.label} className="px-2 py-2 text-center">
+                <span className="text-[11px] text-slate-500">{item.label}</span>
+                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{item.value}</p>
+                {item.note && <p className="text-[10px] leading-relaxed text-slate-500 mt-0.5">{item.note}</p>}
+              </div>
+            ))}
           </div>
-
-          <div>
-            <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
-              <Clock className="w-3 h-3 text-amber-600" /> Moratorium
-            </span>
-              <p className="text-sm font-extrabold text-slate-900 mt-0.5">
-                {scheme.moratoriumTerms ?? `${scheme.moratoriumPeriodMonths} Months`}
-              </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Tenure: {scheme.repaymentTenureYears} Years
-            </p>
-          </div>
-        </div>
+        ) : null}
 
         {/* Estimated EMI & Interest Savings Highlight */}
+        {canShowLoanEstimate && (
         <div className="p-4 bg-sky-50/60 border-b border-sky-100/80">
           <div className="flex items-center justify-between">
             <div>
@@ -124,7 +132,7 @@ export default function SchemeCard({
               </span>
               <p className="text-lg font-black text-slate-900 flex items-center">
                 <IndianRupee className="w-4 h-4 text-sky-700" />
-                {recommendedLoanAmount.toLocaleString('en-IN')}
+                {recommendedLoanAmount!.toLocaleString('en-IN')}
               </p>
             </div>
             <div className="text-right">
@@ -132,13 +140,14 @@ export default function SchemeCard({
                 Est. Monthly EMI
               </span>
               <p className="text-base font-extrabold text-sky-700">
-                ₹{estimatedMonthlyEmi.toLocaleString('en-IN')}<span className="text-[10px] text-slate-500">/mo</span>
+                ₹{estimatedMonthlyEmi!.toLocaleString('en-IN')}<span className="text-[10px] text-slate-500">/mo</span>
               </p>
             </div>
           </div>
 
           <p className="mt-2 text-[10px] text-slate-500">Illustrative monthly equivalent; actual repayment frequency and interest treatment may differ. Confirm with the lender.</p>
         </div>
+        )}
 
         {/* Match Reasons & Caveats */}
         <div className="p-4 space-y-3">
@@ -168,6 +177,23 @@ export default function SchemeCard({
           <p className="text-xs text-slate-600 line-clamp-2 pt-1">
             {scheme.overview}
           </p>
+          <details className="rounded-lg border border-slate-200 bg-white">
+            <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-sky-800">Benefits and eligibility details</summary>
+            <div className="grid gap-4 border-t border-slate-100 p-3 sm:grid-cols-2">
+              <div>
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Benefits and support</h4>
+                <ul className="mt-1 space-y-1.5 text-xs leading-relaxed text-slate-700">
+                  {scheme.keyBenefits.map(benefit => <li key={benefit}>• {benefit}</li>)}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Eligibility</h4>
+                <ul className="mt-1 space-y-1.5 text-xs leading-relaxed text-slate-700">
+                  {scheme.eligibilityBullets.map(item => <li key={item}>• {item}</li>)}
+                </ul>
+              </div>
+            </div>
+          </details>
           <p className="text-[10px] text-slate-500">This is a preliminary screen, not an eligibility decision or loan approval.</p>
         </div>
       </div>
@@ -177,31 +203,36 @@ export default function SchemeCard({
         <button
           id={`ask-ai-${scheme.id}`}
           onClick={() => onAskAi(scheme.name)}
-          className="text-xs text-slate-600 hover:text-sky-700 font-medium flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-sky-50 transition-colors"
+          className="button-motion min-h-10 text-xs text-slate-600 hover:text-sky-700 font-medium flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-sky-50 transition-colors"
         >
           <Sparkles className="w-3.5 h-3.5 text-sky-600" />
           <span>Ask AI Advisor</span>
         </button>
 
         <div className="flex items-center gap-2">
+          {canShowLoanEstimate && (
           <button
             id={`calc-scheme-${scheme.id}`}
             onClick={() => onSelectForCalculator(result)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 transition-colors"
+            className="button-motion min-h-10 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 transition-colors"
           >
             Detailed EMI
           </button>
+          )}
+          {canShowNsfDcDirectory && (
           <button
             id={`locate-partner-${scheme.id}`}
             onClick={() => onSelectForLocator(scheme.id)}
-            className="text-xs font-semibold px-3.5 py-1.5 rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors flex items-center gap-1 shadow-xs"
+            className="button-motion min-h-10 text-xs font-semibold px-3.5 py-2 rounded-lg bg-sky-700 text-white hover:bg-sky-800 transition-colors flex items-center gap-1 shadow-xs"
           >
             <MapPin className="w-3.5 h-3.5" />
             <span>Official partner list</span>
           </button>
+          )}
         </div>
       </div>
       <div className="px-4 pb-3 bg-slate-50">
+        {scheme.availabilityNote && <p className="mb-2 text-[10px] leading-relaxed text-amber-800">{scheme.availabilityNote}</p>}
         <a href={scheme.sourceUrl} target="_blank" rel="noreferrer" className="text-[11px] text-sky-700 hover:underline inline-flex items-center gap-1">
           Official scheme details <span aria-hidden="true">↗</span>
         </a>

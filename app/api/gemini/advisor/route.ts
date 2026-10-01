@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { SCHEMES_DATABASE } from '@/lib/schemes-data';
+import { screenLoanProfile } from '@/lib/loan-screening';
+import type { UserProfile } from '@/lib/types';
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: 'English', hi: 'Hindi', mr: 'Marathi', ta: 'Tamil', te: 'Telugu', bn: 'Bengali',
@@ -20,6 +22,10 @@ export async function POST(req: NextRequest) {
     const body = parsedBody as Record<string, unknown>;
     const query = typeof body.query === 'string' ? body.query.trim() : '';
     const language = typeof body.language === 'string' && Object.hasOwn(LANGUAGE_NAMES, body.language) ? body.language : 'en';
+    const profile = body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)
+      ? body.profile as Partial<UserProfile>
+      : undefined;
+    const loanScreening = screenLoanProfile(profile);
     const requestedSchemeName = typeof body.schemeName === 'string'
       ? SCHEMES_DATABASE.find(scheme => scheme.name === body.schemeName)?.name ?? ''
       : '';
@@ -36,15 +42,21 @@ export async function POST(req: NextRequest) {
     }
 
     const schemeFacts = SCHEMES_DATABASE.map((scheme) => [
-      `${scheme.name}: ${scheme.overview}`,
+      `${scheme.name} (${(scheme.programType ?? 'direct_loan').replaceAll('_', ' ')}): ${scheme.overview}`,
       scheme.minProjectCost === undefined ? '' : `Minimum project cost ₹${scheme.minProjectCost.toLocaleString('en-IN')}.`,
       scheme.maxProjectCost === undefined ? '' : `Maximum project cost ₹${scheme.maxProjectCost.toLocaleString('en-IN')}.`,
-      `Maximum loan ${scheme.maxLoanPercentage}% of cost, capped at ₹${scheme.maxLoanAmount.toLocaleString('en-IN')}.`,
-      `Beneficiary rate ${scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} p.a. ${scheme.interestRateNote ?? ''}`,
+      scheme.maxLoanAmount === undefined ? '' : `Published direct-loan ceiling: ₹${scheme.maxLoanAmount.toLocaleString('en-IN')}.`,
+      scheme.maxLoanPercentage === undefined ? '' : `Published maximum loan share: ${scheme.maxLoanPercentage}% of project cost.`,
+      scheme.concessionalInterestRate === undefined
+        ? 'No single scheme-wide borrower interest rate is published in this record; do not invent one.'
+        : `Published beneficiary rate ${scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} p.a. ${scheme.interestRateNote ?? ''}`,
       scheme.maxIncomeCeiling === undefined ? '' : `Published annual family income ceiling ₹${scheme.maxIncomeCeiling.toLocaleString('en-IN')}.`,
       scheme.repaymentTerms ?? '',
       scheme.moratoriumTerms ? `Moratorium: ${scheme.moratoriumTerms}.` : '',
+      ...(scheme.financialHighlights ?? []).map(item => `${item.label}: ${item.value}. ${item.note ?? ''}`),
+      ...scheme.keyBenefits,
       ...scheme.eligibilityBullets,
+      scheme.availabilityNote ?? '',
       `Official source: ${scheme.sourceUrl}`,
     ].filter(Boolean).join(' ')).join('\n');
     const ai = new GoogleGenAI({ apiKey });
@@ -54,17 +66,24 @@ You are a plain-language scheme information assistant. You are not a government 
 
 Use only the facts and official links below for scheme-specific amounts, rates, and terms. Do not invent subsidies, age limits, rebates, approvals, partner status, processing times, or application outcomes. If the sources do not answer a question, say so and direct the user to the relevant official authority. Make clear that eligibility screening is preliminary and the channel agency decides.
 
-The NSFDC loan programs below are for eligible Scheduled Caste applicants and use the ₹5 lakh annual family-income ceiling. NSKFDC's sanitation-worker scheme has a distinct target group; do not apply NSFDC's income ceiling to it unless the source says so.
+The NSFDC credit schemes are for eligible Scheduled Caste applicants and use the published ₹5 lakh annual family-income ceiling. NSKFDC sanitation-worker support and the listed MSME, MUDRA, PMEGP, PM Vishwakarma, PM SVANidhi, CEGSSC, SCLCSS, and NSSH programmes have distinct audiences, support types, and rules. Do not apply the NSFDC income ceiling to them unless the cited source says so. A guarantee, subsidy, or business-support service is not a direct loan.
+
+The following preliminary screen was computed from the user's Scheme Lens profile using the listed programmes' target groups, income limits, project types, project-cost limits, and required confirmations. Treat its status and options as authoritative for this selected catalogue; do not change a missing, conditional, or no-match result into a definite approval. The profile is user-entered and unverified.
+${loanScreening.summary}
+
+When the user asks whether they may qualify for a loan, subsidy, guarantee, or business-support programme:
+- For "needs details", ask only for the listed missing details. Never treat default zeroes or the default project selection as confirmed facts.
+- For "outside catalog", say this catalog cannot screen their category; do not say they cannot get any loan or support.
+- For "no listed match", say no scheme in this selected catalog matches the entered details; do not rule out other schemes or lenders.
+- For "conditional match", name the listed options and clearly state each condition still needing confirmation.
+- For "potential match", say the profile appears to fit the listed basic criteria, not that the person is eligible or approved. Explain that the relevant authority and lender verify eligibility, funding windows, documents, project viability, and final terms. A guarantee, subsidy, or business-support service is not cash paid directly to the applicant unless the cited source says so.
+- If the user's current question gives details that are absent from or differ from the form profile, acknowledge them. Explain the screen reflects the form, ask them to update or confirm those fields, and do not claim a match until the screen is refreshed.
+- Never imply this app applies for, guarantees, or arranges a loan.
 
 Official scheme facts:
 ${schemeFacts}
 
-Official scheme page: https://nsfdc.nic.in/scheme
-Official eligibility: https://nsfdc.nic.in/eligibility-requirements
-Official application instructions: https://nsfdc.nic.in/how-to-apply-2
-Official partner list: https://nsfdc.nic.in/our-channel-partners
-Official PM SURAJ portal: https://pmsuraj.dosje.gov.in
-NSKFDC SWRS source: https://nskfdc.nic.in/hi/content/home/sanitation-workers-rehabilitation-scheme-swrs
+For scheme links, use the source listed with the specific scheme facts above. The authority or lender makes the final eligibility, credit, guarantee, subsidy, and application decisions.
 
 Instructions for response:
 1. Answer in ${LANGUAGE_NAMES[language]}.

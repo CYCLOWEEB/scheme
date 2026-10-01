@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ExternalLink, Building2, Search, MapPin, Info } from 'lucide-react';
 import { INDIAN_STATES_AND_UTS } from '@/lib/indian-states';
 import { OFFICIAL_SCA_DIRECTORY, OFFICIAL_SCA_SOURCE } from '@/lib/official-sca-data';
@@ -16,14 +16,10 @@ export default function PartnerLocatorMap({
   userState = 'Delhi',
 }: PartnerLocatorMapProps) {
   const scheme = SCHEMES_DATABASE.find(item => item.id === initialSchemeId);
-  const [selectedState, setSelectedState] = useState(
-    INDIAN_STATES_AND_UTS.includes(userState) ? userState : 'Delhi',
-  );
+  const normalizedUserState = INDIAN_STATES_AND_UTS.includes(userState) ? userState : 'Delhi';
+  const [stateChoice, setStateChoice] = useState({ sourceState: userState, value: normalizedUserState });
+  const selectedState = stateChoice.sourceState === userState ? stateChoice.value : normalizedUserState;
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    if (INDIAN_STATES_AND_UTS.includes(userState)) setSelectedState(userState);
-  }, [userState]);
 
   const listedAgencies = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
@@ -68,7 +64,7 @@ export default function PartnerLocatorMap({
             <select
               id="directory-state"
               value={selectedState}
-              onChange={event => { setSelectedState(event.target.value); setSearchQuery(''); }}
+              onChange={event => { setStateChoice({ sourceState: userState, value: event.target.value }); setSearchQuery(''); }}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               {INDIAN_STATES_AND_UTS.map(state => <option key={state} value={state}>{state}</option>)}

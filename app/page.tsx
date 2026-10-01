@@ -21,15 +21,26 @@ export default function HomePage() {
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '',
     category: 'General',
+    categoryProvided: false,
     annualFamilyIncome: 0,
+    incomeProvided: false,
     state: 'Delhi',
     district: '',
     projectType: 'micro_business',
+    projectTypeProvided: false,
     estimatedCost: 0,
     ownContribution: 0,
     hasCasteCertificate: false,
     hasIncomeCertificate: false,
-    hasDPR: false
+    hasDPR: false,
+    age: undefined,
+    newEnterpriseStatus: 'unknown',
+    streetVendorStatus: 'unknown',
+    scStOwnedMseStatus: 'unknown',
+    traditionalTrade: undefined,
+    hasPreviousTarunRepayment: false,
+    projectLocationArea: 'unknown',
+    hasEighthGradeEducation: false,
   });
 
   // Cross-component coordination
@@ -94,8 +105,8 @@ export default function HomePage() {
         <div className={activeTab === 'assistant' ? '' : 'hidden'}>
           <VoiceAIAssistant
             language={language}
-            setLanguage={setLanguage}
             currentSchemeName={currentAiSchemeName}
+            userProfile={userProfile}
             isActive={activeTab === 'assistant'}
           />
         </div>
@@ -116,7 +127,7 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <Image 
                 src="/icon.png" 
-                alt="Smart Scheme Recommender" 
+                alt="Scheme Lens"
                 width={32}
                 height={32}
                 className="w-8 h-8 rounded-lg object-cover ring-1 ring-sky-400/40" 
@@ -124,7 +135,7 @@ export default function HomePage() {
               />
               <div>
                 <h4 className="text-white font-bold text-sm">
-                  Smart Scheme Recommender
+                  Scheme Lens
                 </h4>
                 <p className="text-[11px] text-slate-400">
                   Independent scheme planning aid • Source-linked scheme terms

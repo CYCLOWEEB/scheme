@@ -3,16 +3,14 @@
 import React from 'react';
 import Image from 'next/image';
 import { 
-  Building2, 
   MapPin, 
   Calculator, 
   Sparkles, 
   FileCheck, 
   PhoneCall, 
   Languages, 
-  Layers, 
   ShieldCheck,
-  Award
+  MessageCircle
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -47,8 +45,8 @@ export default function Navbar({
             <span className="inline-flex items-center gap-1 font-semibold text-sky-400">
               <Sparkles className="w-3.5 h-3.5 text-sky-400" /> Scheme for your benefit
             </span>
-            <span className="text-slate-500">|</span>
-            <span>Independent scheme planning aid</span>
+            <span className="hidden text-slate-500 sm:inline">|</span>
+            <span className="hidden sm:inline">Independent scheme planning aid</span>
             <span className="hidden sm:inline text-slate-500">•</span>
             <span className="hidden sm:inline text-slate-400">Official sources linked throughout</span>
           </div>
@@ -72,7 +70,7 @@ export default function Navbar({
           <div className="flex items-center gap-3">
             <Image
               src="/icon.png"
-              alt="Smart Scheme Recommender"
+              alt="Scheme Lens"
               width={40}
               height={40}
               className="w-10 h-10 rounded-xl object-cover shadow-sm ring-2 ring-sky-400/30 border border-sky-200"
@@ -81,7 +79,7 @@ export default function Navbar({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-extrabold tracking-tight text-slate-900 flex items-center gap-1.5">
-                  Smart <span className="text-sky-600">Scheme Recommender</span>
+                  Scheme Lens
                   <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200">
                     Planning Aid
                   </span>
@@ -121,73 +119,82 @@ export default function Navbar({
         </div>
 
         {/* Navigation Tabs Bar */}
-        <nav className="mt-3 flex items-center space-x-1 overflow-x-auto pb-1 scrollbar-none border-t border-slate-100 pt-2">
+        <nav aria-label="Primary navigation" className="mt-3 flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none border-t border-slate-100 pt-2">
           <button
             id="tab-wizard"
+            type="button"
             onClick={() => setActiveTab('wizard')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+            aria-current={activeTab === 'wizard' ? 'page' : undefined}
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === 'wizard'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-sky-700 hover:bg-sky-50'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            <span>Smart Scheme Recommender</span>
+            <span>Scheme Lens</span>
           </button>
 
           <button
             id="tab-calculator"
+            type="button"
             onClick={() => setActiveTab('calculator')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+            aria-current={activeTab === 'calculator' ? 'page' : undefined}
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === 'calculator'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-sky-700 hover:bg-sky-50'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
             }`}
           >
             <Calculator className="w-4 h-4" />
-            <span>Financial & EMI Calculator</span>
+            <span>Calculator</span>
           </button>
 
           <button
             id="tab-locator"
+            type="button"
             onClick={() => setActiveTab('locator')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+            aria-current={activeTab === 'locator' ? 'page' : undefined}
+            title="Official Channel Directory"
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === 'locator'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-sky-700 hover:bg-sky-50'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
             }`}
           >
             <MapPin className="w-4 h-4" />
-            <span>Official Channel Directory</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 font-bold border border-slate-200">
-              Official
-            </span>
+            <span>Find agency</span>
           </button>
 
           <button
             id="tab-assistant"
+            type="button"
             onClick={() => setActiveTab('assistant')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+            aria-current={activeTab === 'assistant' ? 'page' : undefined}
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === 'assistant'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-sky-700 hover:bg-sky-50'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
             }`}
           >
-            <Building2 className="w-4 h-4" />
-            <span>AI Seva Vaani (Voice & Chat)</span>
+            <MessageCircle className="w-4 h-4" />
+            <span>Voice Chat</span>
           </button>
 
           <button
             id="tab-documents"
+            type="button"
             onClick={() => setActiveTab('documents')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+            aria-current={activeTab === 'documents' ? 'page' : undefined}
+            title="Document Readiness Locker"
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
               activeTab === 'documents'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-sky-700 hover:bg-sky-50'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
             }`}
           >
             <FileCheck className="w-4 h-4" />
-            <span>Document Readiness Locker</span>
+            <span>Documents</span>
           </button>
         </nav>
       </div>

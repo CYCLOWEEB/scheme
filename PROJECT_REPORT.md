@@ -1,7 +1,7 @@
 # Project analysis and changes
 
 **Reviewed:** 29 September 2026  
-**Project:** Smart Scheme Recommender (Next.js / React)
+**Project:** Scheme Lens (Next.js / React)
 
 ## What the project does
 

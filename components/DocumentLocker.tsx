@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CheckCircle2, Circle, ExternalLink, FileText, Printer, ShieldCheck } from 'lucide-react';
 import { UserProfile } from '@/lib/types';
 import { SCHEMES_DATABASE } from '@/lib/schemes-data';
@@ -16,6 +16,9 @@ function isReadyFromProfile(document: string, profile: UserProfile): boolean {
   if (label.includes('income proof')) return profile.hasIncomeCertificate;
   if (label.includes('admission')) return Boolean(profile.hasAdmission);
   if (label.includes('sanitation-worker')) return Boolean(profile.hasSanitationWorkerEligibility);
+  if (label.includes('street-vendor') || label.includes('vendor identity')) return profile.streetVendorStatus === 'yes';
+  if (label.includes('sc/st ownership') || label.includes('enterprise ownership')) return profile.scStOwnedMseStatus === 'yes';
+  if (label.includes('trade and occupation')) return Boolean(profile.traditionalTrade);
   if (label.includes('project report') || label.includes('quotation') || label.includes('estimate')) return profile.hasDPR;
   return false;
 }
@@ -28,7 +31,6 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
     Object.fromEntries(requirements.map((document, index) => [`${index}-${document}`, isReadyFromProfile(document, userProfile)])),
   );
   const [dateLabel, setDateLabel] = useState('');
-  useEffect(() => setDateLabel(new Date().toLocaleDateString('en-IN')), []);
   const readyCount = requirements.filter((document, index) => ready[`${index}-${document}`]).length;
   const readinessPercent = requirements.length ? Math.round((readyCount / requirements.length) * 100) : 0;
 
@@ -106,7 +108,10 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
         </div>
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => {
+            setDateLabel(new Date().toLocaleDateString('en-IN'));
+            window.setTimeout(() => window.print(), 0);
+          }}
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700"
         >
           <Printer className="h-4 w-4" /> Print or save as PDF
@@ -134,8 +139,10 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
             <p><b>Scheme:</b> {scheme.name}</p>
             <p><b>Project / course cost:</b> ₹{userProfile.estimatedCost.toLocaleString('en-IN')}</p>
             <p><b>Own contribution entered:</b> ₹{userProfile.ownContribution.toLocaleString('en-IN')}</p>
-            <p><b>Published beneficiary rate:</b> {scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} p.a.</p>
-            <p><b>Maximum listed loan:</b> ₹{scheme.maxLoanAmount.toLocaleString('en-IN')}</p>
+            <p><b>Support type:</b> {scheme.programType?.replaceAll('_', ' ') ?? 'direct loan'}</p>
+            {scheme.concessionalInterestRate !== undefined && <p><b>Published beneficiary rate:</b> {scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} p.a.</p>}
+            {scheme.maxLoanAmount !== undefined && <p><b>Maximum listed loan:</b> ₹{scheme.maxLoanAmount.toLocaleString('en-IN')}</p>}
+            {scheme.financialHighlights?.map(item => <p key={item.label}><b>{item.label}:</b> {item.value}</p>)}
           </div>
         </div>
 

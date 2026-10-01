@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { UserProfile, BeneficiaryCategory, ProjectType, SchemeMatchResult } from '@/lib/types';
 import { matchSchemes } from '@/lib/rule-engine';
+import { VISHWAKARMA_TRADES } from '@/lib/schemes-data';
 import { INDIAN_STATES_AND_UTS } from '@/lib/indian-states';
 import SchemeCard from './SchemeCard';
 import { 
@@ -37,12 +38,14 @@ export default function SchemeWizard({
   const matchResults = useMemo(() => {
     const results = matchSchemes(userProfile);
     if (selectedCategoryFilter === 'all') return results;
+    if (selectedCategoryFilter === 'StreetVendor') return results.filter(result => result.scheme.id === 'pm-svanidhi');
     const filterTypes: Record<string, ProjectType[]> = {
       Nano: ['micro_business'],
       Commercial: ['term_loan_services', 'term_loan_mfg', 'transport_vehicle'],
       Education: ['education_domestic', 'education_abroad'],
       Green: ['green_business'],
       Sanitation: ['sanitation_mech'],
+      Artisan: ['traditional_trade'],
     };
     return results.filter(r => filterTypes[selectedCategoryFilter]?.some(type => r.scheme.projectTypes.includes(type)));
   }, [userProfile, selectedCategoryFilter]);
@@ -53,10 +56,13 @@ export default function SchemeWizard({
       setUserProfile({
         name: 'Ramesh Kumar',
         category: 'SC',
+        categoryProvided: true,
         annualFamilyIncome: 140000,
+        incomeProvided: true,
         state: 'Uttar Pradesh',
         district: 'Lucknow',
         projectType: 'micro_business',
+        projectTypeProvided: true,
         estimatedCost: 120000,
         ownContribution: 10000,
         hasCasteCertificate: true,
@@ -64,15 +70,23 @@ export default function SchemeWizard({
         hasDPR: false,
         hasAdmission: false,
         hasSanitationWorkerEligibility: false,
+        age: 28,
+        newEnterpriseStatus: 'yes',
+        streetVendorStatus: 'yes',
+        scStOwnedMseStatus: 'yes',
+        projectLocationArea: 'urban',
       });
     } else if (presetType === 'women_shg') {
       setUserProfile({
         name: 'Sunita Devi',
         category: 'SC',
+        categoryProvided: true,
         annualFamilyIncome: 180000,
+        incomeProvided: true,
         state: 'Maharashtra',
         district: 'Pune',
         projectType: 'micro_business',
+        projectTypeProvided: true,
         estimatedCost: 140000,
         ownContribution: 10000,
         hasCasteCertificate: true,
@@ -80,15 +94,23 @@ export default function SchemeWizard({
         hasDPR: true,
         hasAdmission: false,
         hasSanitationWorkerEligibility: false,
+        age: 34,
+        newEnterpriseStatus: 'yes',
+        streetVendorStatus: 'unknown',
+        scStOwnedMseStatus: 'yes',
+        projectLocationArea: 'rural',
       });
     } else if (presetType === 'education') {
       setUserProfile({
         name: 'Amit Anand',
         category: 'SC',
+        categoryProvided: true,
         annualFamilyIncome: 320000,
+        incomeProvided: true,
         state: 'Delhi',
         district: 'Central Delhi',
         projectType: 'education_abroad',
+        projectTypeProvided: true,
         estimatedCost: 2500000,
         ownContribution: 150000,
         hasCasteCertificate: true,
@@ -96,15 +118,19 @@ export default function SchemeWizard({
         hasDPR: true,
         hasAdmission: true,
         hasSanitationWorkerEligibility: false,
+        age: 22,
       });
     } else if (presetType === 'sanitation') {
       setUserProfile({
         name: 'Vikas Valmiki',
         category: 'SafaiKaramchari',
+        categoryProvided: true,
         annualFamilyIncome: 160000,
+        incomeProvided: true,
         state: 'Delhi',
         district: 'East Delhi',
         projectType: 'sanitation_mech',
+        projectTypeProvided: true,
         estimatedCost: 1500000,
         ownContribution: 50000,
         hasCasteCertificate: true,
@@ -112,15 +138,19 @@ export default function SchemeWizard({
         hasDPR: true,
         hasAdmission: false,
         hasSanitationWorkerEligibility: true,
+        age: 32,
       });
     } else if (presetType === 'green') {
       setUserProfile({
         name: 'Pooja Bharti',
         category: 'SC',
+        categoryProvided: true,
         annualFamilyIncome: 280000,
+        incomeProvided: true,
         state: 'Karnataka',
         district: 'Bengaluru Urban',
         projectType: 'green_business',
+        projectTypeProvided: true,
         estimatedCost: 1800000,
         ownContribution: 180000,
         hasCasteCertificate: true,
@@ -128,6 +158,10 @@ export default function SchemeWizard({
         hasDPR: true,
         hasAdmission: false,
         hasSanitationWorkerEligibility: false,
+        age: 30,
+        newEnterpriseStatus: 'yes',
+        scStOwnedMseStatus: 'yes',
+        projectLocationArea: 'urban',
       });
     }
     setStep(3); // jump directly to results
@@ -136,7 +170,7 @@ export default function SchemeWizard({
   return (
     <div className="space-y-6">
       {/* Top Banner with Quick Presets */}
-      <div className="bg-gradient-to-r from-sky-950 via-blue-900 to-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-sky-800/60">
+      <div className="hero-surface soft-arrive text-white rounded-2xl p-5 sm:p-6 shadow-md border border-sky-800/60">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -145,7 +179,7 @@ export default function SchemeWizard({
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              Smart Scheme Recommender
+              Scheme Lens
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
               Compare a small, source-linked set of schemes against the details you enter. Estimates are preliminary; this tool does not submit applications or promise subsidies.
@@ -161,35 +195,35 @@ export default function SchemeWizard({
               <button
                 id="preset-nano"
                 onClick={() => loadPreset('nano')}
-                className="text-xs bg-slate-700 hover:bg-sky-700 text-white px-2.5 py-1 rounded-md transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-sky-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
               >
                 Kirana / Nano (₹1.2L)
               </button>
               <button
                 id="preset-women"
                 onClick={() => loadPreset('women_shg')}
-                className="text-xs bg-slate-700 hover:bg-pink-700 text-white px-2.5 py-1 rounded-md transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-pink-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
               >
                 Women entrepreneur (₹1.4L)
               </button>
               <button
                 id="preset-edu"
                 onClick={() => loadPreset('education')}
-                className="text-xs bg-slate-700 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-md transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
               >
                 Education Abroad (₹25L)
               </button>
               <button
                 id="preset-sanitation"
                 onClick={() => loadPreset('sanitation')}
-                className="text-xs bg-slate-700 hover:bg-amber-700 text-white px-2.5 py-1 rounded-md transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-amber-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
               >
                 Sanitation Mech (₹15L)
               </button>
               <button
                 id="preset-green"
                 onClick={() => loadPreset('green')}
-                className="text-xs bg-slate-700 hover:bg-teal-700 text-white px-2.5 py-1 rounded-md transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-teal-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
               >
                 Green business example (₹18L)
               </button>
@@ -199,37 +233,43 @@ export default function SchemeWizard({
       </div>
 
       {/* Step Tabs Navigation */}
-      <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-2 shadow-2xs">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-xl p-2 shadow-2xs">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto scrollbar-none">
           <button
             id="step-tab-1"
+            type="button"
             onClick={() => setStep(1)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            aria-current={step === 1 ? 'step' : undefined}
+            className={`button-motion flex min-h-10 shrink-0 items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
               step === 1 ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">1</span>
-            <span>Personal & Category</span>
+            <span>Profile</span>
           </button>
           <button
             id="step-tab-2"
+            type="button"
             onClick={() => setStep(2)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            aria-current={step === 2 ? 'step' : undefined}
+            className={`button-motion flex min-h-10 shrink-0 items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
               step === 2 ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">2</span>
-            <span>Project & Financials</span>
+            <span>Project</span>
           </button>
           <button
             id="step-tab-3"
+            type="button"
             onClick={() => setStep(3)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            aria-current={step === 3 ? 'step' : undefined}
+            className={`button-motion flex min-h-10 shrink-0 items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
               step === 3 ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">3</span>
-            <span>Matched Schemes ({matchResults.length})</span>
+            <span>Matches ({matchResults.length})</span>
           </button>
         </div>
 
@@ -238,10 +278,13 @@ export default function SchemeWizard({
             setUserProfile({
               name: '',
               category: 'General',
+              categoryProvided: false,
               annualFamilyIncome: 0,
+              incomeProvided: false,
               state: 'Delhi',
               district: '',
               projectType: 'micro_business',
+              projectTypeProvided: false,
               estimatedCost: 0,
               ownContribution: 0,
               hasCasteCertificate: false,
@@ -249,10 +292,18 @@ export default function SchemeWizard({
               hasDPR: false,
               hasAdmission: false,
               hasSanitationWorkerEligibility: false,
+              age: undefined,
+              newEnterpriseStatus: 'unknown',
+              streetVendorStatus: 'unknown',
+              scStOwnedMseStatus: 'unknown',
+              traditionalTrade: undefined,
+              hasPreviousTarunRepayment: false,
+              projectLocationArea: 'unknown',
+              hasEighthGradeEducation: false,
             });
             setStep(1);
           }}
-          className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-slate-100"
+          className="button-motion min-h-10 shrink-0 text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-slate-100"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Reset</span>
@@ -261,10 +312,10 @@ export default function SchemeWizard({
 
       {/* Step 1: Personal & Category Profile */}
       {step === 1 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
+        <div className="soft-arrive bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-lg font-bold text-slate-900">Step 1: Beneficiary Category & Location</h3>
-            <p className="text-xs text-slate-500">This catalog covers selected NSFDC credit for SC applicants and an NSKFDC sanitation-worker scheme; other groups may have separate schemes.</p>
+            <p className="text-xs text-slate-500">Explore SC/ST enterprise support, inclusive microenterprise loans, street-vendor credit, artisan support, and NSFDC education and business schemes.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -290,16 +341,20 @@ export default function SchemeWizard({
               </label>
               <select
                 id="input-category"
-                value={userProfile.category}
-                onChange={(e) => setUserProfile(p => ({ ...p, category: e.target.value as BeneficiaryCategory }))}
+                value={userProfile.categoryProvided ? userProfile.category : ''}
+                onChange={(e) => {
+                  const value = e.target.value as BeneficiaryCategory | '';
+                  setUserProfile(p => ({ ...p, category: value || 'General', categoryProvided: value !== '' }));
+                }}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
               >
-                <option value="General">Choose a category</option>
-                <option value="SC">Scheduled Caste (SC) — NSFDC schemes</option>
-                <option value="SafaiKaramchari">Eligible sanitation worker — NSKFDC scheme</option>
-                <option value="OBC">Other Backward Class (not covered by this catalog)</option>
-                <option value="ST">Scheduled Tribe (not covered by this catalog)</option>
-                <option value="Minority">Notified Minority (not covered by this catalog)</option>
+                <option value="">Choose a category</option>
+                <option value="General">General / other category</option>
+                <option value="SC">Scheduled Caste (SC)</option>
+                <option value="ST">Scheduled Tribe (ST)</option>
+                <option value="OBC">Other Backward Class (OBC)</option>
+                <option value="SafaiKaramchari">Eligible sanitation worker</option>
+                <option value="Minority">Notified minority</option>
               </select>
             </div>
 
@@ -331,13 +386,26 @@ export default function SchemeWizard({
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Applicant age (years)</label>
+              <input
+                type="number"
+                id="input-age"
+                min="0"
+                max="120"
+                value={userProfile.age ?? ''}
+                onChange={(e) => setUserProfile(p => ({ ...p, age: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0) }))}
+                className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <p className="mt-1 text-[10px] text-slate-500">Used for schemes with a published minimum age.</p>
+            </div>
           </div>
 
           <div className="flex justify-end pt-3">
             <button
               id="next-step-1-btn"
               onClick={() => setStep(2)}
-              className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
+              className="button-motion min-h-11 bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
             >
               <span>Next: Project & Financials</span>
               <ArrowRight className="w-4 h-4" />
@@ -348,7 +416,7 @@ export default function SchemeWizard({
 
       {/* Step 2: Project & Financial Parameters */}
       {step === 2 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
+        <div className="soft-arrive bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-lg font-bold text-slate-900">Step 2: Project Sector, Income & Cost Estimate</h3>
             <p className="text-xs text-slate-500">We compare your project with published cost and income limits. Any grant or final eligibility must be confirmed by the scheme authority.</p>
@@ -363,7 +431,7 @@ export default function SchemeWizard({
               <select
                 id="input-project-type"
                 value={userProfile.projectType}
-                onChange={(e) => setUserProfile(p => ({ ...p, projectType: e.target.value as ProjectType }))}
+                onChange={(e) => setUserProfile(p => ({ ...p, projectType: e.target.value as ProjectType, projectTypeProvided: true }))}
                 className="w-full text-sm px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
               >
                 <option value="micro_business">Micro Business / Nano Enterprise (vendors, tea stalls, tailoring, petty shops)</option>
@@ -374,6 +442,7 @@ export default function SchemeWizard({
                 <option value="sanitation_mech">Sanitation Mechanization (Suction trucks, Jetting machines up to ₹15L)</option>
                 <option value="education_domestic">Eligible higher education in India</option>
                 <option value="education_abroad">Eligible higher education abroad</option>
+                <option value="traditional_trade">Traditional artisan or crafts trade</option>
               </select>
             </div>
 
@@ -415,10 +484,10 @@ export default function SchemeWizard({
                 min="0"
                 step="5000"
                 value={userProfile.annualFamilyIncome}
-                onChange={(e) => setUserProfile(p => ({ ...p, annualFamilyIncome: Math.max(0, parseInt(e.target.value) || 0) }))}
+                onChange={(e) => setUserProfile(p => ({ ...p, annualFamilyIncome: Math.max(0, parseInt(e.target.value) || 0), incomeProvided: true }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="text-[10px] text-slate-500 mt-1">The NSFDC loan ceiling is ₹5 lakh. The NSKFDC sanitation scheme uses different rules; confirm directly.</p>
+              <p className="text-[10px] text-slate-500 mt-1">NSFDC SC credit schemes use a ₹5 lakh family-income ceiling. Other listed programmes have different rules.</p>
             </div>
 
             {/* Own Equity / Promoter Contribution */}
@@ -444,6 +513,52 @@ export default function SchemeWizard({
             </div>
           </div>
 
+          <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <summary className="cursor-pointer text-xs font-bold text-slate-800">Additional programme checks <span className="font-normal text-slate-500">(optional)</span></summary>
+            <p className="mb-3 mt-2 text-[10px] text-slate-500">These answers help narrow programmes with trade, business ownership, or new-unit conditions. Choose “Not sure” when uncertain.</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="text-xs font-medium text-slate-700">Is this a new enterprise?
+                <select value={userProfile.newEnterpriseStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, newEnterpriseStatus: e.target.value as UserProfile['newEnterpriseStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
+                  <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No, already operating</option>
+                </select>
+              </label>
+              <label className="text-xs font-medium text-slate-700">Street-vendor status
+                <select value={userProfile.streetVendorStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, streetVendorStatus: e.target.value as UserProfile['streetVendorStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
+                  <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option>
+                </select>
+              </label>
+              <label className="text-xs font-medium text-slate-700">SC/ST-majority owned MSE?
+                <select value={userProfile.scStOwnedMseStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, scStOwnedMseStatus: e.target.value as UserProfile['scStOwnedMseStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
+                  <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option>
+                </select>
+              </label>
+              {userProfile.projectType === 'traditional_trade' && (
+                <label className="text-xs font-medium text-slate-700">Artisan trade
+                  <select value={userProfile.traditionalTrade ?? ''} onChange={e => setUserProfile(p => ({ ...p, traditionalTrade: e.target.value || undefined }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
+                    <option value="">Choose a trade</option>{VISHWAKARMA_TRADES.map(trade => <option key={trade} value={trade}>{trade}</option>)}
+                  </select>
+                </label>
+              )}
+              {userProfile.category === 'SC' || userProfile.category === 'ST' ? (
+                <label className="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-700">
+                  <input type="checkbox" checked={Boolean(userProfile.hasPreviousTarunRepayment)} onChange={e => setUserProfile(p => ({ ...p, hasPreviousTarunRepayment: e.target.checked }))} className="rounded text-sky-600 focus:ring-sky-500" />
+                  Previous PMMY Tarun loan successfully repaid
+                </label>
+              ) : null}
+              <label className="text-xs font-medium text-slate-700">Project location
+                <select value={userProfile.projectLocationArea ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, projectLocationArea: e.target.value as UserProfile['projectLocationArea'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
+                  <option value="unknown">Not sure / not applicable</option><option value="rural">Rural</option><option value="urban">Urban</option>
+                </select>
+              </label>
+              {['term_loan_mfg', 'term_loan_services', 'micro_business', 'transport_vehicle', 'green_business', 'traditional_trade'].includes(userProfile.projectType) ? (
+                <label className="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-700">
+                  <input type="checkbox" checked={Boolean(userProfile.hasEighthGradeEducation)} onChange={e => setUserProfile(p => ({ ...p, hasEighthGradeEducation: e.target.checked }))} className="rounded text-sky-600 focus:ring-sky-500" />
+                  VIII standard education completed
+                </label>
+              ) : null}
+            </div>
+          </details>
+
           {/* Quick Checklist Checkbox Grid */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
             <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
@@ -459,7 +574,7 @@ export default function SchemeWizard({
                   onChange={(e) => setUserProfile(p => ({ ...p, hasCasteCertificate: e.target.checked }))}
                   className="rounded text-sky-600 focus:ring-sky-500"
                 />
-              <span>SC certificate available</span>
+              <span>SC/ST certificate available (where applicable)</span>
               </label>
 
               <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
@@ -520,7 +635,7 @@ export default function SchemeWizard({
             <button
               id="match-schemes-btn"
               onClick={() => setStep(3)}
-              className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
+              className="button-motion min-h-11 bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
               <span>Show Matched Schemes ({matchResults.length})</span>
@@ -533,7 +648,7 @@ export default function SchemeWizard({
       {step === 3 && (
         <div className="space-y-6">
           {/* Summary Strip */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+          <div className="soft-arrive bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center font-bold">
                 {matchResults.length}
@@ -559,7 +674,9 @@ export default function SchemeWizard({
                 { id: 'Commercial', label: 'Term Loans' },
                 { id: 'Education', label: 'Higher Education' },
                 { id: 'Green', label: 'Green Tech' },
-                { id: 'Sanitation', label: 'Sanitation' }
+                { id: 'Sanitation', label: 'Sanitation' },
+                { id: 'StreetVendor', label: 'Street Vendors' },
+                { id: 'Artisan', label: 'Artisan trades' },
               ].map(f => (
                 <button
                   key={f.id}
@@ -593,14 +710,30 @@ export default function SchemeWizard({
           {matchResults.length === 0 && (
             <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
               <p className="text-sm font-semibold text-slate-700">No listed schemes match these choices.</p>
-              <p className="mt-2 text-xs text-slate-500">This catalog currently covers selected NSFDC loans for SC applicants and one NSKFDC sanitation-worker scheme. Check the official directory for other categories or schemes.</p>
-              <a href="https://socialjustice.gov.in" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-semibold text-sky-700 underline">Ministry of Social Justice and Empowerment</a>
-              <button
-                onClick={() => setSelectedCategoryFilter('all')}
-                className="mt-2 text-xs font-semibold text-sky-600 underline"
-              >
-                Reset Filter
-              </button>
+              <p className="mt-2 text-xs text-slate-500">
+                {!userProfile.categoryProvided || !userProfile.projectTypeProvided || userProfile.estimatedCost <= 0
+                  ? 'Choose a beneficiary category and project, then enter an estimated cost to see relevant programmes.'
+                  : 'No programme in this selected catalogue matches the current answers. Eligibility and available application windows can vary by lender, location, and scheme authority.'}
+              </p>
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <a
+                  href="https://socialjustice.gov.in"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-sky-700 underline"
+                >
+                  Ministry of Social Justice and Empowerment
+                </a>
+                {selectedCategoryFilter !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategoryFilter('all')}
+                    className="text-xs font-semibold text-sky-600 underline"
+                  >
+                    Reset Filter
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
