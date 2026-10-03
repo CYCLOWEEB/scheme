@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { ExternalLink, Building2, Search, MapPin, Info } from 'lucide-react';
+import AgencyLocationsMap from '@/components/AgencyLocationsMap';
 import { INDIAN_STATES_AND_UTS } from '@/lib/indian-states';
 import { OFFICIAL_SCA_DIRECTORY, OFFICIAL_SCA_SOURCE } from '@/lib/official-sca-data';
 import { SCHEMES_DATABASE } from '@/lib/schemes-data';
@@ -9,11 +10,13 @@ import { SCHEMES_DATABASE } from '@/lib/schemes-data';
 interface PartnerLocatorMapProps {
   initialSchemeId?: string;
   userState?: string;
+  isActive?: boolean;
 }
 
 export default function PartnerLocatorMap({
   initialSchemeId = 'all',
   userState = 'Delhi',
+  isActive = true,
 }: PartnerLocatorMapProps) {
   const scheme = SCHEMES_DATABASE.find(item => item.id === initialSchemeId);
   const normalizedUserState = INDIAN_STATES_AND_UTS.includes(userState) ? userState : 'Delhi';
@@ -39,7 +42,7 @@ export default function PartnerLocatorMap({
               Find a state channel agency
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              These agency names and addresses come from NSFDC’s published state/UT list. Confirm the current office, scheme availability, and application process before travelling.
+              This list is from NSFDC. Call first to check the address, open schemes, and how to apply.
             </p>
           </div>
           <a
@@ -48,19 +51,19 @@ export default function PartnerLocatorMap({
             rel="noreferrer"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-800"
           >
-            Full official partner list <ExternalLink className="h-4 w-4" />
+            See full agency list <ExternalLink className="h-4 w-4" />
           </a>
         </div>
 
         {scheme?.corporation === 'NSKFDC' && (
           <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-            <b>This is an NSKFDC scheme.</b> The state entries below are NSFDC’s directory. For sanitation-worker scheme rules and the correct application channel, confirm directly with <a className="font-semibold underline" href={scheme.sourceUrl} target="_blank" rel="noreferrer">NSKFDC</a>.
+            <b>This scheme is from NSKFDC.</b> The list below is from NSFDC. Ask <a className="font-semibold underline" href={scheme.sourceUrl} target="_blank" rel="noreferrer">NSKFDC</a> about the rules and where to apply.
           </div>
         )}
 
         <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div>
-            <label htmlFor="directory-state" className="mb-1.5 block text-xs font-bold text-slate-700">State or Union Territory</label>
+            <label htmlFor="directory-state" className="mb-1.5 block text-xs font-bold text-slate-700">State / UT</label>
             <select
               id="directory-state"
               value={selectedState}
@@ -71,7 +74,7 @@ export default function PartnerLocatorMap({
             </select>
           </div>
           <div>
-            <label htmlFor="directory-search" className="mb-1.5 block text-xs font-bold text-slate-700">Search listed agency or address</label>
+            <label htmlFor="directory-search" className="mb-1.5 block text-xs font-bold text-slate-700">Search by name or address</label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -79,7 +82,7 @@ export default function PartnerLocatorMap({
                 type="search"
                 value={searchQuery}
                 onChange={event => setSearchQuery(event.target.value)}
-                placeholder="Search this state's directory"
+                placeholder="Search this list"
                 className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
@@ -88,13 +91,14 @@ export default function PartnerLocatorMap({
 
         <div className="mt-5 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />
-          <p>This published list is not a live branch locator and does not show current funding, branch-level contacts, or application status. Verify details with the agency or use the official online application portal.</p>
+          <p>This list may be out of date. It does not show open funding or application status. Call the agency or use PM-SURAJ to check.</p>
         </div>
       </section>
 
       {listedAgencies.length > 0 ? (
         <section aria-live="polite" className="space-y-3">
-          <h3 className="text-sm font-bold text-slate-700">{listedAgencies.length} published {listedAgencies.length === 1 ? 'agency' : 'agencies'} for {selectedState}</h3>
+          <h3 className="text-sm font-bold text-slate-700">{listedAgencies.length} {listedAgencies.length === 1 ? 'agency' : 'agencies'} in {selectedState}</h3>
+          <AgencyLocationsMap agencies={listedAgencies} isActive={isActive} />
           <div className="grid gap-4 md:grid-cols-2">
             {listedAgencies.map((agency, index) => (
               <article key={`${agency.name}-${index}`} className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
@@ -111,13 +115,13 @@ export default function PartnerLocatorMap({
         </section>
       ) : (
         <section className="rounded-xl border border-slate-200 bg-white p-6 text-center">
-          <h3 className="font-bold text-slate-900">No SCA entry for {selectedState} in this published list</h3>
-          <p className="mt-2 text-sm text-slate-600">Check the complete official partner directory for other channel agencies or a newer state listing.</p>
+          <h3 className="font-bold text-slate-900">No agency listed for {selectedState}</h3>
+          <p className="mt-2 text-sm text-slate-600">See the full official list or ask your local agency.</p>
         </section>
       )}
 
       <div className="flex flex-wrap gap-3 text-xs">
-        <a href={OFFICIAL_SCA_SOURCE} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-sky-700 hover:underline">Open the source SCA list <ExternalLink className="h-3.5 w-3.5" /></a>
+        <a href={OFFICIAL_SCA_SOURCE} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-sky-700 hover:underline">Open the source agency list <ExternalLink className="h-3.5 w-3.5" /></a>
         {scheme?.corporation !== 'NSKFDC' && <a href="https://pmsuraj.dosje.gov.in" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-sky-700 hover:underline">PM SURAJ application portal <ExternalLink className="h-3.5 w-3.5" /></a>}
       </div>
     </div>

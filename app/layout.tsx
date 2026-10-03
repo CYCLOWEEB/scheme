@@ -1,12 +1,6 @@
 import type {Metadata} from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import 'leaflet/dist/leaflet.css';
 import './globals.css'; // Global styles
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-plus-jakarta',
-});
 
 export const metadata: Metadata = {
   title: 'Scheme Lens | Independent Scheme Planning Aid',
@@ -29,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en" className={plusJakarta.variable}>
+    <html lang="en">
       <head>
         <link rel="icon" href="/icon.png" />
         <link rel="apple-touch-icon" href="/icon.png" />

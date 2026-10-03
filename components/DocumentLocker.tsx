@@ -43,16 +43,16 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
               <ShieldCheck className="h-3.5 w-3.5" /> Personal document checklist
             </span>
             <h2 className="mt-3 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Prepare for an application</h2>
-            <p className="mt-1 max-w-3xl text-sm text-slate-600">Mark documents you have on hand. These marks remain in memory while this view is open; no files are uploaded, stored, or verified by this tool.</p>
+            <p className="mt-1 max-w-3xl text-sm text-slate-600">Tick the papers you have. This list stays while the page is open. No files are saved or checked here.</p>
           </div>
           <div className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 md:max-w-xs">
             <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-700">
-              <span>Self-reported readiness</span><span className="text-sky-700">{readinessPercent}%</span>
+              <span>Your checklist</span><span className="text-sky-700">{readinessPercent}%</span>
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
               <div className="h-full bg-sky-600 transition-all" style={{ width: `${readinessPercent}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-slate-500">{readyCount} of {requirements.length} items marked as available</p>
+            <p className="mt-1 text-[11px] text-slate-500">{readyCount} of {requirements.length} papers ready</p>
           </div>
         </div>
       </section>
@@ -61,7 +61,7 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-800">Checklist for {scheme.name}</h3>
-            <span className="text-[11px] text-slate-500">Confirm the current list with the channel agency.</span>
+            <span className="text-[11px] text-slate-500">Ask the agency for its latest list.</span>
           </div>
           <div className="sm:min-w-72">
             <label htmlFor="document-scheme-select" className="mb-1 block text-[11px] font-bold text-slate-600">Choose a scheme</label>
@@ -92,7 +92,7 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
                 {isReady ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" /> : <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-300" />}
                 <span>
                   <span className="block text-sm font-semibold text-slate-900">{document}</span>
-                  <span className="mt-1 block text-xs text-slate-500">{isReady ? 'Marked as available by you' : 'Not marked as available'}</span>
+                  <span className="mt-1 block text-xs text-slate-500">{isReady ? 'You have this' : 'Still needed'}</span>
                 </span>
               </label>
             );
@@ -100,11 +100,11 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-900 p-5 text-white sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-4 rounded-2xl border border-sky-100 bg-sky-50 p-5 text-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-sky-300"><FileText className="h-3.5 w-3.5" /> Print-friendly preparation sheet</p>
+          <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-sky-800"><FileText className="h-3.5 w-3.5" /> Print-friendly preparation sheet</p>
           <h3 className="mt-1 text-lg font-bold">Review your details before visiting or applying online</h3>
-          <p className="mt-1 text-xs text-slate-300">The sheet is personal planning material. It is not a government form, application, approval, or submission receipt.</p>
+          <p className="mt-1 text-xs text-slate-600">This is your checklist, not a government form or application.</p>
         </div>
         <button
           type="button"
@@ -112,7 +112,7 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
             setDateLabel(new Date().toLocaleDateString('en-IN'));
             window.setTimeout(() => window.print(), 0);
           }}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-800"
         >
           <Printer className="h-4 w-4" /> Print or save as PDF
         </button>
@@ -140,7 +140,7 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
             <p><b>Project / course cost:</b> ₹{userProfile.estimatedCost.toLocaleString('en-IN')}</p>
             <p><b>Own contribution entered:</b> ₹{userProfile.ownContribution.toLocaleString('en-IN')}</p>
             <p><b>Support type:</b> {scheme.programType?.replaceAll('_', ' ') ?? 'direct loan'}</p>
-            {scheme.concessionalInterestRate !== undefined && <p><b>Published beneficiary rate:</b> {scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} p.a.</p>}
+            {scheme.concessionalInterestRate !== undefined && <p><b>Published rate:</b> {scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} per year</p>}
             {scheme.maxLoanAmount !== undefined && <p><b>Maximum listed loan:</b> ₹{scheme.maxLoanAmount.toLocaleString('en-IN')}</p>}
             {scheme.financialHighlights?.map(item => <p key={item.label}><b>{item.label}:</b> {item.value}</p>)}
           </div>
@@ -159,7 +159,7 @@ export default function DocumentLocker({ userProfile, selectedSchemeId = 'nsfdc-
         </div>
 
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">
-          Confirm all current eligibility conditions, documents, rates, and repayment terms with the scheme authority. The channel agency makes the decision. This preparation sheet is not submitted to any authority.
+          Ask the scheme agency about current rules, papers, rates, and payments. The agency makes the decision. This sheet is not sent to them.
         </div>
 
         <div className="mt-4 flex flex-wrap gap-4 text-xs font-semibold">

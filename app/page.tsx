@@ -8,13 +8,15 @@ import FinancialCalculator from '@/components/FinancialCalculator';
 import PartnerLocatorMap from '@/components/PartnerLocatorMap';
 import VoiceAIAssistant from '@/components/VoiceAIAssistant';
 import DocumentLocker from '@/components/DocumentLocker';
+import UploadDocuments from '@/components/UploadDocuments';
+import DemoStudio from '@/components/DemoStudio';
 import { UserProfile, SchemeMatchResult } from '@/lib/types';
 import { 
   ExternalLink,
 } from 'lucide-react';
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents'>('wizard');
+  const [activeTab, setActiveTab] = useState<'showcase' | 'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents' | 'upload'>('showcase');
   const [language, setLanguage] = useState<string>('en');
 
   // Beneficiary Profile State
@@ -63,6 +65,16 @@ export default function HomePage() {
     setActiveTab('assistant');
   };
 
+  const handleLoadDemoProfile = (profile: UserProfile) => {
+    setUserProfile(profile);
+    setActiveTab('wizard');
+  };
+
+  const handleOpenDocuments = (schemeId: string) => {
+    setSelectedSchemeIdForCalc(schemeId);
+    setActiveTab('documents');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       {/* Navbar with Sticky Tabs */}
@@ -75,6 +87,15 @@ export default function HomePage() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className={activeTab === 'showcase' ? '' : 'hidden'}>
+          <DemoStudio
+            onLoadProfile={handleLoadDemoProfile}
+            onSelectForCalculator={(result) => handleSelectForCalculator(result)}
+            onSelectForLocator={handleSelectForLocator}
+            onOpenDocuments={handleOpenDocuments}
+          />
+        </div>
+
         <div className={activeTab === 'wizard' ? '' : 'hidden'}>
           <SchemeWizard
             onSelectForCalculator={handleSelectForCalculator}
@@ -99,6 +120,7 @@ export default function HomePage() {
           <PartnerLocatorMap
             initialSchemeId={selectedSchemeIdForLocator}
             userState={userProfile.state}
+            isActive={activeTab === 'locator'}
           />
         </div>
 
@@ -117,6 +139,10 @@ export default function HomePage() {
             userProfile={userProfile}
             selectedSchemeId={selectedSchemeIdForCalc}
           />
+        </div>
+
+        <div className={activeTab === 'upload' ? '' : 'hidden'}>
+          <UploadDocuments isActive={activeTab === 'upload'} />
         </div>
       </main>
 
@@ -138,7 +164,7 @@ export default function HomePage() {
                   Scheme Lens
                 </h4>
                 <p className="text-[11px] text-slate-400">
-                  Independent scheme planning aid • Source-linked scheme terms
+                  Plan for schemes • Check official sources
                 </p>
               </div>
             </div>
@@ -168,10 +194,10 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
             <p>
-              Independent planning tool. Not an official government service and not affiliated with NSFDC, NSKFDC, or any ministry.
+              This is not a government service. It is not run by NSFDC, NSKFDC, or a ministry.
             </p>
             <p>
-              Confirm eligibility, rates, documents, and application status with the official scheme authority.
+              Ask the scheme agency to confirm rules, rates, papers, and how to apply.
             </p>
           </div>
         </div>

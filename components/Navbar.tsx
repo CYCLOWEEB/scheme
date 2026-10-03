@@ -10,12 +10,14 @@ import {
   PhoneCall, 
   Languages, 
   ShieldCheck,
-  MessageCircle
+  MessageCircle,
+  Upload,
+  Compass,
 } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents';
-  setActiveTab: (tab: 'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents') => void;
+  activeTab: 'showcase' | 'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents' | 'upload';
+  setActiveTab: (tab: 'showcase' | 'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents' | 'upload') => void;
   language: string;
   setLanguage: (lang: string) => void;
 }
@@ -121,6 +123,21 @@ export default function Navbar({
         {/* Navigation Tabs Bar */}
         <nav aria-label="Primary navigation" className="mt-3 flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none border-t border-slate-100 pt-2">
           <button
+            id="tab-showcase"
+            type="button"
+            onClick={() => setActiveTab('showcase')}
+            aria-current={activeTab === 'showcase' ? 'page' : undefined}
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+              activeTab === 'showcase'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            <span>Lens</span>
+          </button>
+
+          <button
             id="tab-wizard"
             type="button"
             onClick={() => setActiveTab('wizard')}
@@ -132,7 +149,7 @@ export default function Navbar({
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            <span>Scheme Lens</span>
+            <span>Find schemes</span>
           </button>
 
           <button
@@ -195,6 +212,22 @@ export default function Navbar({
           >
             <FileCheck className="w-4 h-4" />
             <span>Documents</span>
+          </button>
+
+          <button
+            id="tab-upload"
+            type="button"
+            onClick={() => setActiveTab('upload')}
+            aria-current={activeTab === 'upload' ? 'page' : undefined}
+            title="Upload private documents and photos"
+            className={`button-motion flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+              activeTab === 'upload'
+                ? 'bg-sky-700 text-white shadow-sm'
+                : 'text-slate-600 hover:text-sky-800 hover:bg-sky-50'
+            }`}
+          >
+            <Upload className="w-4 h-4" />
+            <span>Upload</span>
           </button>
         </nav>
       </div>

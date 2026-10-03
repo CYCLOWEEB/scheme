@@ -6,6 +6,7 @@ import { matchSchemes } from '@/lib/rule-engine';
 import { VISHWAKARMA_TRADES } from '@/lib/schemes-data';
 import { INDIAN_STATES_AND_UTS } from '@/lib/indian-states';
 import SchemeCard from './SchemeCard';
+import SchemeComparison from './SchemeComparison';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -13,7 +14,8 @@ import {
   CheckCircle2, 
   Filter, 
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  ArrowLeftRight,
 } from 'lucide-react';
 
 interface SchemeWizardProps {
@@ -33,10 +35,12 @@ export default function SchemeWizard({
 }: SchemeWizardProps) {
   const [step, setStep] = useState<number>(1);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [comparedSchemeIds, setComparedSchemeIds] = useState<string[]>([]);
 
   // Compute matched schemes using rule engine
+  const allMatchResults = useMemo(() => matchSchemes(userProfile), [userProfile]);
   const matchResults = useMemo(() => {
-    const results = matchSchemes(userProfile);
+    const results = allMatchResults;
     if (selectedCategoryFilter === 'all') return results;
     if (selectedCategoryFilter === 'StreetVendor') return results.filter(result => result.scheme.id === 'pm-svanidhi');
     const filterTypes: Record<string, ProjectType[]> = {
@@ -48,10 +52,24 @@ export default function SchemeWizard({
       Artisan: ['traditional_trade'],
     };
     return results.filter(r => filterTypes[selectedCategoryFilter]?.some(type => r.scheme.projectTypes.includes(type)));
-  }, [userProfile, selectedCategoryFilter]);
+  }, [allMatchResults, selectedCategoryFilter]);
+  const comparedResults = useMemo(
+    () => allMatchResults.filter(result => comparedSchemeIds.includes(result.scheme.id)),
+    [allMatchResults, comparedSchemeIds],
+  );
+
+  const toggleComparison = (schemeId: string) => {
+    setComparedSchemeIds(current => {
+      const currentMatches = current.filter(id => allMatchResults.some(result => result.scheme.id === id));
+      return currentMatches.includes(schemeId)
+        ? currentMatches.filter(id => id !== schemeId)
+        : currentMatches.length < 3 ? [...currentMatches, schemeId] : currentMatches;
+    });
+  };
 
   // Fictional profiles for trying the matching flow.
   const loadPreset = (presetType: 'nano' | 'women_shg' | 'education' | 'sanitation' | 'green') => {
+    setComparedSchemeIds([]);
     if (presetType === 'nano') {
       setUserProfile({
         name: 'Ramesh Kumar',
@@ -170,60 +188,60 @@ export default function SchemeWizard({
   return (
     <div className="space-y-6">
       {/* Top Banner with Quick Presets */}
-      <div className="hero-surface soft-arrive text-white rounded-2xl p-5 sm:p-6 shadow-md border border-sky-800/60">
+      <div className="soft-arrive bg-gradient-to-r from-sky-50 to-white text-slate-900 rounded-2xl p-5 sm:p-6 shadow-sm border border-sky-100">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-200 text-xs font-semibold border border-sky-400/30 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-sky-300" /> Independent planning aid
+                <span className="px-3 py-1 rounded-full bg-white text-sky-800 text-xs font-semibold border border-sky-200 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-sky-700" /> Independent planning aid
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
               Scheme Lens
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-              Compare a small, source-linked set of schemes against the details you enter. Estimates are preliminary; this tool does not submit applications or promise subsidies.
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
+              Add a few details to see possible schemes. This tool does not apply for you or promise a loan or grant.
             </p>
           </div>
 
           {/* Fictional example profiles */}
-          <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 shrink-0">
-            <span className="text-[11px] font-bold text-amber-300 block mb-2 flex items-center gap-1 uppercase tracking-wider">
-              <UserCheck className="w-3.5 h-3.5 text-amber-400" /> Fictional examples (replace before using):
+          <div className="bg-white border border-slate-200 rounded-xl p-3 shrink-0">
+            <span className="text-[11px] font-bold text-amber-800 block mb-2 flex items-center gap-1 uppercase tracking-wider">
+              <UserCheck className="w-3.5 h-3.5 text-amber-600" /> Sample profiles
             </span>
             <div className="flex flex-wrap gap-1.5">
               <button
                 id="preset-nano"
                 onClick={() => loadPreset('nano')}
-                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-sky-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-white hover:bg-sky-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Kirana / Nano (₹1.2L)
+                Kirana shop (₹1.2L)
               </button>
               <button
                 id="preset-women"
                 onClick={() => loadPreset('women_shg')}
-                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-pink-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-white hover:bg-pink-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Women entrepreneur (₹1.4L)
+                Woman-owned business (₹1.4L)
               </button>
               <button
                 id="preset-edu"
                 onClick={() => loadPreset('education')}
-                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-white hover:bg-indigo-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Education Abroad (₹25L)
+                Study abroad (₹25L)
               </button>
               <button
                 id="preset-sanitation"
                 onClick={() => loadPreset('sanitation')}
-                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-amber-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-white hover:bg-amber-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Sanitation Mech (₹15L)
+                Sanitation equipment (₹15L)
               </button>
               <button
                 id="preset-green"
                 onClick={() => loadPreset('green')}
-                className="button-motion min-h-9 text-xs bg-slate-700 hover:bg-teal-700 text-white px-3 py-2 rounded-lg transition-colors font-medium border border-slate-600"
+                className="button-motion min-h-9 text-xs bg-white hover:bg-teal-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
                 Green business example (₹18L)
               </button>
@@ -275,6 +293,7 @@ export default function SchemeWizard({
 
         <button
           onClick={() => {
+            setComparedSchemeIds([]);
             setUserProfile({
               name: '',
               category: 'General',
@@ -315,14 +334,14 @@ export default function SchemeWizard({
         <div className="soft-arrive bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-lg font-bold text-slate-900">Step 1: Beneficiary Category & Location</h3>
-            <p className="text-xs text-slate-500">Explore SC/ST enterprise support, inclusive microenterprise loans, street-vendor credit, artisan support, and NSFDC education and business schemes.</p>
+              <p className="text-xs text-slate-500">Choose your group and where you live to find schemes that may fit.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* Full Name */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Beneficiary / Applicant Name
+                Applicant name
               </label>
               <input
                 type="text"
@@ -361,7 +380,7 @@ export default function SchemeWizard({
             {/* State */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                State / UT (Determines State Channelizing Agency)
+                State / UT
               </label>
               <select
                 id="input-state"
@@ -376,7 +395,7 @@ export default function SchemeWizard({
             {/* District */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                District / Town
+                District or town
               </label>
               <input
                 type="text"
@@ -387,7 +406,7 @@ export default function SchemeWizard({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Applicant age (years)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Age (years)</label>
               <input
                 type="number"
                 id="input-age"
@@ -397,7 +416,7 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, age: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0) }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="mt-1 text-[10px] text-slate-500">Used for schemes with a published minimum age.</p>
+              <p className="mt-1 text-[10px] text-slate-500">Some schemes have an age rule.</p>
             </div>
           </div>
 
@@ -407,7 +426,7 @@ export default function SchemeWizard({
               onClick={() => setStep(2)}
               className="button-motion min-h-11 bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
             >
-              <span>Next: Project & Financials</span>
+              <span>Next: Project costs</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -419,14 +438,14 @@ export default function SchemeWizard({
         <div className="soft-arrive bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-lg font-bold text-slate-900">Step 2: Project Sector, Income & Cost Estimate</h3>
-            <p className="text-xs text-slate-500">We compare your project with published cost and income limits. Any grant or final eligibility must be confirmed by the scheme authority.</p>
+            <p className="text-xs text-slate-500">Share your project cost and family income. The agency confirms the final rules.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* Project / Purpose Type */}
             <div className="md:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Intended Project / Purpose Type <span className="text-sky-600 font-bold">*</span>
+                What do you need support for? <span className="text-sky-600 font-bold">*</span>
               </label>
               <select
                 id="input-project-type"
@@ -434,15 +453,15 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, projectType: e.target.value as ProjectType, projectTypeProvided: true }))}
                 className="w-full text-sm px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
               >
-                <option value="micro_business">Micro Business / Nano Enterprise (vendors, tea stalls, tailoring, petty shops)</option>
-                <option value="term_loan_services">Services & Commercial (Auto repair, Printing, Medical clinic, Salon up to ₹50L)</option>
-                <option value="term_loan_mfg">Manufacturing & Industrial (Agro-processing, Fabrication, Craft up to ₹50L)</option>
-                <option value="transport_vehicle">Commercial Transport (E-Rickshaw, Auto, Small Goods Carrier)</option>
-                <option value="green_business">Green or environmentally beneficial business</option>
-                <option value="sanitation_mech">Sanitation Mechanization (Suction trucks, Jetting machines up to ₹15L)</option>
-                <option value="education_domestic">Eligible higher education in India</option>
-                <option value="education_abroad">Eligible higher education abroad</option>
-                <option value="traditional_trade">Traditional artisan or crafts trade</option>
+                <option value="micro_business">Small business (shop, stall, tailoring)</option>
+                <option value="term_loan_services">Services (repair, printing, clinic, salon; up to ₹50L)</option>
+                <option value="term_loan_mfg">Making goods (food processing, metal work, craft; up to ₹50L)</option>
+                <option value="transport_vehicle">Transport (e-rickshaw, auto, goods vehicle)</option>
+                <option value="green_business">Green business</option>
+                <option value="sanitation_mech">Sanitation equipment (suction trucks, jetting machines; up to ₹15L)</option>
+                <option value="education_domestic">Higher education in India</option>
+                <option value="education_abroad">Higher education abroad</option>
+                <option value="traditional_trade">Artisan or craft work</option>
               </select>
             </div>
 
@@ -450,7 +469,7 @@ export default function SchemeWizard({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  Estimated Total Project Cost
+                  Project or course cost
                 </label>
               <span className="text-xs font-bold text-sky-700 font-mono">
                   ₹{userProfile.estimatedCost.toLocaleString('en-IN')}
@@ -465,14 +484,14 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, estimatedCost: Math.max(0, parseInt(e.target.value) || 0) }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="text-[10px] text-slate-500 mt-1">For education, enter the total course fee. The ELS loan is capped at ₹40 lakh or 90% of fees, whichever is lower.</p>
+              <p className="text-[10px] text-slate-500 mt-1">For study, enter the full fee. NSFDC’s education loan limit is ₹40 lakh or 90% of fees, whichever is lower.</p>
             </div>
 
             {/* Annual Family Income */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  Annual Family Income {userProfile.category === 'SC' ? '(NSFDC loan ceiling: ₹5,00,000)' : '(as reported)'}
+                  Annual family income
                 </label>
                 <span className={`text-xs font-bold font-mono ${userProfile.category !== 'SC' ? 'text-slate-700' : userProfile.annualFamilyIncome <= 500000 ? 'text-sky-700' : 'text-rose-600'}`}>
                   ₹{userProfile.annualFamilyIncome.toLocaleString('en-IN')}
@@ -487,14 +506,14 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, annualFamilyIncome: Math.max(0, parseInt(e.target.value) || 0), incomeProvided: true }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="text-[10px] text-slate-500 mt-1">NSFDC SC credit schemes use a ₹5 lakh family-income ceiling. Other listed programmes have different rules.</p>
+              <p className="text-[10px] text-slate-500 mt-1">For NSFDC SC loans, family income must be ₹5 lakh or less. Other schemes have different rules.</p>
             </div>
 
             {/* Own Equity / Promoter Contribution */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  Own Contribution / Promoter Equity
+                  Your contribution
                 </label>
                 <span className="text-xs font-bold text-slate-700 font-mono">
                   ₹{userProfile.ownContribution.toLocaleString('en-IN')}
@@ -509,13 +528,13 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, ownContribution: Math.max(0, parseInt(e.target.value) || 0) }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <span className="text-[10px] text-slate-500">Funding share varies by scheme and lender. This amount is used only to estimate any remaining project-cost gap.</span>
+              <span className="text-[10px] text-slate-500">This helps estimate how much of the cost is still left to fund.</span>
             </div>
           </div>
 
           <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <summary className="cursor-pointer text-xs font-bold text-slate-800">Additional programme checks <span className="font-normal text-slate-500">(optional)</span></summary>
-            <p className="mb-3 mt-2 text-[10px] text-slate-500">These answers help narrow programmes with trade, business ownership, or new-unit conditions. Choose “Not sure” when uncertain.</p>
+            <p className="mb-3 mt-2 text-[10px] text-slate-500">These answers help find schemes for your work or business. Choose “Not sure” if you don’t know.</p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <label className="text-xs font-medium text-slate-700">Is this a new enterprise?
                 <select value={userProfile.newEnterpriseStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, newEnterpriseStatus: e.target.value as UserProfile['newEnterpriseStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
@@ -527,7 +546,7 @@ export default function SchemeWizard({
                   <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option>
                 </select>
               </label>
-              <label className="text-xs font-medium text-slate-700">SC/ST-majority owned MSE?
+              <label className="text-xs font-medium text-slate-700">Do SC/ST people own more than half of this business?
                 <select value={userProfile.scStOwnedMseStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, scStOwnedMseStatus: e.target.value as UserProfile['scStOwnedMseStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
                   <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option>
                 </select>
@@ -542,7 +561,7 @@ export default function SchemeWizard({
               {userProfile.category === 'SC' || userProfile.category === 'ST' ? (
                 <label className="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-700">
                   <input type="checkbox" checked={Boolean(userProfile.hasPreviousTarunRepayment)} onChange={e => setUserProfile(p => ({ ...p, hasPreviousTarunRepayment: e.target.checked }))} className="rounded text-sky-600 focus:ring-sky-500" />
-                  Previous PMMY Tarun loan successfully repaid
+                  Earlier PMMY Tarun loan paid back in full
                 </label>
               ) : null}
               <label className="text-xs font-medium text-slate-700">Project location
@@ -553,7 +572,7 @@ export default function SchemeWizard({
               {['term_loan_mfg', 'term_loan_services', 'micro_business', 'transport_vehicle', 'green_business', 'traditional_trade'].includes(userProfile.projectType) ? (
                 <label className="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-700">
                   <input type="checkbox" checked={Boolean(userProfile.hasEighthGradeEducation)} onChange={e => setUserProfile(p => ({ ...p, hasEighthGradeEducation: e.target.checked }))} className="rounded text-sky-600 focus:ring-sky-500" />
-                  VIII standard education completed
+                  Finished class 8
                 </label>
               ) : null}
             </div>
@@ -596,7 +615,7 @@ export default function SchemeWizard({
                     onChange={(e) => setUserProfile(p => ({ ...p, hasAdmission: e.target.checked }))}
                     className="rounded text-sky-600 focus:ring-sky-500"
                   />
-                  <span>Admission to an eligible recognized course confirmed</span>
+                <span>Admission confirmed for your course</span>
                 </label>
               )}
               {userProfile.projectType === 'sanitation_mech' && (
@@ -608,7 +627,7 @@ export default function SchemeWizard({
                     onChange={(e) => setUserProfile(p => ({ ...p, hasSanitationWorkerEligibility: e.target.checked }))}
                     className="rounded text-sky-600 focus:ring-sky-500"
                   />
-                  <span>Eligible sanitation-worker status confirmed</span>
+                  <span>Sanitation-worker eligibility confirmed</span>
                 </label>
               )}
 
@@ -620,7 +639,7 @@ export default function SchemeWizard({
                   onChange={(e) => setUserProfile(p => ({ ...p, hasDPR: e.target.checked }))}
                   className="rounded text-sky-600 focus:ring-sky-500"
                 />
-                <span>Project Report / Vendor Quotation (DPR)</span>
+                <span>Project report or seller’s quote</span>
               </label>
             </div>
           </div>
@@ -638,7 +657,7 @@ export default function SchemeWizard({
               className="button-motion min-h-11 bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Show Matched Schemes ({matchResults.length})</span>
+              <span>See schemes ({matchResults.length})</span>
             </button>
           </div>
         </div>
@@ -655,12 +674,17 @@ export default function SchemeWizard({
               </div>
               <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                  Potential schemes for {userProfile.name || 'Beneficiary'} ({userProfile.category})
+                  Possible schemes for {userProfile.name || 'you'} ({userProfile.category})
                 </h3>
                 <p className="text-xs text-slate-500">
                   Income: ₹{(userProfile.annualFamilyIncome / 100000).toFixed(2)}L • Est. Cost: ₹{(userProfile.estimatedCost / 100000).toFixed(2)}L • {userProfile.state}
                 </p>
               </div>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+              <ArrowLeftRight className="h-4 w-4 shrink-0 text-sky-700" />
+              <span><b>{comparedResults.length}/3</b> picked to compare</span>
             </div>
 
             {/* Quick Category Filters */}
@@ -669,14 +693,14 @@ export default function SchemeWizard({
                 <Filter className="w-3.5 h-3.5" /> Filter:
               </span>
               {[
-                { id: 'all', label: 'All Schemes' },
+                { id: 'all', label: 'All' },
                 { id: 'Nano', label: 'Micro / Nano' },
-                { id: 'Commercial', label: 'Term Loans' },
+                { id: 'Commercial', label: 'Business loans' },
                 { id: 'Education', label: 'Higher Education' },
-                { id: 'Green', label: 'Green Tech' },
+                { id: 'Green', label: 'Green work' },
                 { id: 'Sanitation', label: 'Sanitation' },
                 { id: 'StreetVendor', label: 'Street Vendors' },
-                { id: 'Artisan', label: 'Artisan trades' },
+                { id: 'Artisan', label: 'Craft work' },
               ].map(f => (
                 <button
                   key={f.id}
@@ -694,6 +718,15 @@ export default function SchemeWizard({
             </div>
           </div>
 
+          {comparedResults.length > 0 && (
+            <SchemeComparison
+              results={comparedResults}
+              onRemove={toggleComparison}
+              onSelectForCalculator={onSelectForCalculator}
+              onSelectForLocator={onSelectForLocator}
+            />
+          )}
+
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {matchResults.map((result) => (
@@ -703,17 +736,20 @@ export default function SchemeWizard({
                 onSelectForCalculator={onSelectForCalculator}
                 onSelectForLocator={onSelectForLocator}
                 onAskAi={onAskAi}
+                isCompared={comparedResults.some(compared => compared.scheme.id === result.scheme.id)}
+                canCompare={comparedResults.length < 3 || comparedResults.some(compared => compared.scheme.id === result.scheme.id)}
+                onToggleCompare={toggleComparison}
               />
             ))}
           </div>
 
           {matchResults.length === 0 && (
             <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
-              <p className="text-sm font-semibold text-slate-700">No listed schemes match these choices.</p>
+              <p className="text-sm font-semibold text-slate-700">No match yet. Try changing your answers.</p>
               <p className="mt-2 text-xs text-slate-500">
                 {!userProfile.categoryProvided || !userProfile.projectTypeProvided || userProfile.estimatedCost <= 0
-                  ? 'Choose a beneficiary category and project, then enter an estimated cost to see relevant programmes.'
-                  : 'No programme in this selected catalogue matches the current answers. Eligibility and available application windows can vary by lender, location, and scheme authority.'}
+                  ? 'Choose your group and project, then add the cost.'
+                  : 'No match in this list yet. Rules can vary by scheme and location.'}
               </p>
               <div className="mt-3 flex flex-col items-center gap-2">
                 <a

@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+body {
+  font-family: "Segoe UI Variable", "Segoe UI", "Nirmala UI", system-ui, sans-serif;
+  line-height: 1.5;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+}
+
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
   outline: 3px solid #0284c7 !important;
   outline-offset: 3px;
@@ -11,6 +18,31 @@
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+.agency-map-marker-shell {
+  border: 0;
+  background: transparent;
+}
+
+.agency-map-marker {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 26px;
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 0;
+  background: #0369a1;
+  box-shadow: 0 2px 5px rgb(15 23 42 / 38%);
+  transform: rotate(-45deg);
+}
+
+.agency-map-marker::after {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: white;
+  content: '';
 }
 
 .hero-surface {

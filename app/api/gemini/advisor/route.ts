@@ -4,8 +4,27 @@ import { SCHEMES_DATABASE } from '@/lib/schemes-data';
 import { screenLoanProfile } from '@/lib/loan-screening';
 import type { UserProfile } from '@/lib/types';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 const LANGUAGE_NAMES: Record<string, string> = {
-  en: 'English', hi: 'Hindi', mr: 'Marathi', ta: 'Tamil', te: 'Telugu', bn: 'Bengali',
+  en: 'English', zh: 'Chinese', de: 'German', es: 'Spanish', ru: 'Russian', ko: 'Korean',
+  fr: 'French', ja: 'Japanese', pt: 'Portuguese', tr: 'Turkish', pl: 'Polish', ca: 'Catalan',
+  nl: 'Dutch', ar: 'Arabic', sv: 'Swedish', it: 'Italian', id: 'Indonesian', hi: 'Hindi',
+  fi: 'Finnish', vi: 'Vietnamese', he: 'Hebrew', uk: 'Ukrainian', el: 'Greek', ms: 'Malay',
+  cs: 'Czech', ro: 'Romanian', da: 'Danish', hu: 'Hungarian', ta: 'Tamil', no: 'Norwegian',
+  th: 'Thai', ur: 'Urdu', hr: 'Croatian', bg: 'Bulgarian', lt: 'Lithuanian', la: 'Latin',
+  mi: 'Maori', ml: 'Malayalam', cy: 'Welsh', sk: 'Slovak', te: 'Telugu', fa: 'Persian',
+  lv: 'Latvian', bn: 'Bengali', sr: 'Serbian', az: 'Azerbaijani', sl: 'Slovenian', kn: 'Kannada',
+  et: 'Estonian', mk: 'Macedonian', br: 'Breton', eu: 'Basque', is: 'Icelandic', hy: 'Armenian',
+  ne: 'Nepali', mn: 'Mongolian', bs: 'Bosnian', kk: 'Kazakh', sq: 'Albanian', sw: 'Swahili',
+  gl: 'Galician', mr: 'Marathi', pa: 'Punjabi', si: 'Sinhala', km: 'Khmer', sn: 'Shona',
+  yo: 'Yoruba', so: 'Somali', af: 'Afrikaans', oc: 'Occitan', ka: 'Georgian', be: 'Belarusian',
+  tg: 'Tajik', sd: 'Sindhi', gu: 'Gujarati', am: 'Amharic', yi: 'Yiddish', lo: 'Lao',
+  uz: 'Uzbek', fo: 'Faroese', ht: 'Haitian Creole', ps: 'Pashto', tk: 'Turkmen', nn: 'Nynorsk',
+  mt: 'Maltese', sa: 'Sanskrit', lb: 'Luxembourgish', my: 'Burmese', bo: 'Tibetan', tl: 'Tagalog',
+  mg: 'Malagasy', as: 'Assamese', tt: 'Tatar', haw: 'Hawaiian', ln: 'Lingala', ha: 'Hausa',
+  ba: 'Bashkir', jw: 'Javanese', su: 'Sundanese',
 };
 
 export async function POST(req: NextRequest) {
@@ -21,7 +40,8 @@ export async function POST(req: NextRequest) {
     }
     const body = parsedBody as Record<string, unknown>;
     const query = typeof body.query === 'string' ? body.query.trim() : '';
-    const language = typeof body.language === 'string' && Object.hasOwn(LANGUAGE_NAMES, body.language) ? body.language : 'en';
+    const requestedLanguage = typeof body.language === 'string' ? body.language : 'en';
+    const language = Object.hasOwn(LANGUAGE_NAMES, requestedLanguage) ? requestedLanguage : 'en';
     const profile = body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)
       ? body.profile as Partial<UserProfile>
       : undefined;
@@ -101,20 +121,66 @@ Selected scheme, if any: ${requestedSchemeName || 'None'}
 Provide practical information while following the system rules.
 `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        systemInstruction,
-        maxOutputTokens: 900,
-      }
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const send = (event: Record<string, string>) => {
+          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+        };
+
+        try {
+          const responseStream = await ai.interactions.create({
+            model: 'gemini-3.8-flash',
+            input: prompt,
+            system_instruction: systemInstruction,
+            generation_config: {
+              thinking_level: 'low',
+              max_output_tokens: 900,
+            },
+            stream: true,
+            // Scheme profiles can contain personal details; the advisor does not
+            // need Google's server-side conversation history for a single turn.
+            store: false,
+          });
+
+          let receivedText = false;
+          let completed = false;
+          for await (const chunk of responseStream) {
+            if (chunk.event_type === 'step.delta' && chunk.delta.type === 'text' && chunk.delta.text) {
+              receivedText = true;
+              send({ type: 'delta', text: chunk.delta.text });
+            } else if (chunk.event_type === 'interaction.completed') {
+              completed = true;
+            } else if (chunk.event_type === 'error') {
+              const code = chunk.error?.code ?? 'unknown';
+              throw new Error(`Gemini interaction stream failed (${code}).`);
+            }
+          }
+
+          if (!completed || !receivedText) {
+            throw new Error(`Gemini interaction returned an incomplete answer (completed=${completed}, text=${receivedText}).`);
+          }
+          send({ type: 'done' });
+        } catch (error) {
+          const providerError = error as { name?: unknown; status?: unknown; code?: unknown };
+          console.error('Gemini Advisor stream failed.', {
+            name: typeof providerError.name === 'string' ? providerError.name : 'Error',
+            status: typeof providerError.status === 'number' ? providerError.status : undefined,
+            code: typeof providerError.code === 'string' ? providerError.code : undefined,
+          });
+          send({ type: 'error', error: 'Gemini could not finish the answer. Please try again.' });
+        } finally {
+          controller.close();
+        }
+      },
     });
 
-    const reply = response.text || 'I could not generate an answer at this moment. Please check your network or try again.';
-
-    return NextResponse.json({
-      text: reply,
-      language,
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'application/x-ndjson; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Accel-Buffering': 'no',
+      },
     });
   } catch {
     console.error('Gemini Advisor request failed.');
