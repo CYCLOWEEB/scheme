@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap, FeatureGroup } from 'leaflet';
 import type { OfficialScaRecord } from '@/lib/official-sca-data';
+import { tr } from '@/lib/ui-copy';
 
 interface AgencyLocationsMapProps {
+  language: string;
   agencies: OfficialScaRecord[];
   isActive: boolean;
 }
@@ -22,7 +24,8 @@ function directionsUrl(agency: OfficialScaRecord, locationAddress?: string) {
   return url.toString();
 }
 
-export default function AgencyLocationsMap({ agencies, isActive }: AgencyLocationsMapProps) {
+export default function AgencyLocationsMap({ agencies, isActive, language }: AgencyLocationsMapProps) {
+  const t = (text: string) => tr(language, text);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<FeatureGroup | null>(null);
@@ -43,7 +46,9 @@ export default function AgencyLocationsMap({ agencies, isActive }: AgencyLocatio
         zoom: 5,
         scrollWheelZoom: false,
         attributionControl: false,
+        zoomControl: false,
       });
+      L.control.zoom({ zoomInTitle: tr(language, 'Zoom in'), zoomOutTitle: tr(language, 'Zoom out') }).addTo(map);
       L.control.attribution({ prefix: false }).addTo(map);
       L.tileLayer(OSM_TILE_URL, {
         maxZoom: 19,
@@ -70,7 +75,7 @@ export default function AgencyLocationsMap({ agencies, isActive }: AgencyLocatio
       markersRef.current = null;
       setMapReady(false);
     };
-  }, [isActive]);
+  }, [isActive, language]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -92,7 +97,7 @@ export default function AgencyLocationsMap({ agencies, isActive }: AgencyLocatio
             const [latitude, longitude] = location.coordinates;
             positions.push([latitude, longitude]);
 
-            const title = `Open directions to ${agency.name} — ${location.label}`;
+            const title = tr(language, `Open directions to ${agency.name} — ${location.label}`);
             const marker = L.marker([latitude, longitude], {
               title,
               alt: title,
@@ -127,28 +132,28 @@ export default function AgencyLocationsMap({ agencies, isActive }: AgencyLocatio
       disposed = true;
       cancelAnimationFrame(frameId);
     };
-  }, [agencies, isActive, mapReady]);
+  }, [agencies, isActive, language, mapReady]);
 
   return (
-    <section aria-label="Agency map" className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <section aria-label={t('Agency map')} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex flex-col gap-1 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Agency map</h3>
-          <p className="mt-0.5 text-xs text-slate-500">Click a marker to open Google Maps directions in a new tab.</p>
+          <h3 className="text-sm font-bold text-slate-900">{t('Agency map')}</h3>
+          <p className="mt-0.5 text-xs text-slate-500">{t('Click a marker to open Google Maps directions in a new tab.')}</p>
         </div>
-        <span className="text-[11px] text-slate-500">Pins show approximate locality positions</span>
+        <span className="text-[11px] text-slate-500">{t('Pins show approximate locality positions')}</span>
       </div>
       <div className="relative">
         <div ref={containerRef} className="h-[360px] w-full bg-slate-100 sm:h-[440px]" />
         {!mapReady && (
           <div role="status" className="absolute inset-0 flex items-center justify-center bg-slate-100 text-sm text-slate-500">
-            Loading map…
+            {t('Loading map…')}
           </div>
         )}
       </div>
       <p className="border-t border-slate-100 px-4 py-2.5 text-[11px] leading-relaxed text-slate-500">
-        Map pins are approximate and based on the locality in the published directory. Google Maps directions use the full listed office address. Map data and tiles © OpenStreetMap contributors.{' '}
-        <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer" className="font-semibold text-sky-700 hover:underline">Report a map issue</a>
+        {t('Map pins are approximate and based on the locality in the published directory. Google Maps directions use the full listed office address. Map data and tiles © OpenStreetMap contributors.')}{' '}
+        <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noreferrer" className="font-semibold text-sky-700 hover:underline">{t('Report a map issue')}</a>
       </p>
     </section>
   );

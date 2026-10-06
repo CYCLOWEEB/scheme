@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import SchemeWizard from '@/components/SchemeWizard';
@@ -11,6 +11,7 @@ import DocumentLocker from '@/components/DocumentLocker';
 import UploadDocuments from '@/components/UploadDocuments';
 import DemoStudio from '@/components/DemoStudio';
 import { UserProfile, SchemeMatchResult } from '@/lib/types';
+import { tr } from '@/lib/ui-copy';
 import { 
   ExternalLink,
 } from 'lucide-react';
@@ -18,6 +19,10 @@ import {
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'showcase' | 'wizard' | 'calculator' | 'locator' | 'assistant' | 'documents' | 'upload'>('showcase');
   const [language, setLanguage] = useState<string>('en');
+
+  useEffect(() => {
+    document.documentElement.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : language;
+  }, [language]);
 
   // Beneficiary Profile State
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -86,9 +91,10 @@ export default function HomePage() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className={activeTab === 'showcase' ? '' : 'hidden'}>
-          <DemoStudio
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
+        <div className={activeTab === 'showcase' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
+        <DemoStudio
+            language={language}
             onLoadProfile={handleLoadDemoProfile}
             onSelectForCalculator={(result) => handleSelectForCalculator(result)}
             onSelectForLocator={handleSelectForLocator}
@@ -98,6 +104,7 @@ export default function HomePage() {
 
         <div className={activeTab === 'wizard' ? '' : 'hidden'}>
           <SchemeWizard
+            language={language}
             onSelectForCalculator={handleSelectForCalculator}
             onSelectForLocator={handleSelectForLocator}
             onAskAi={handleAskAi}
@@ -108,6 +115,7 @@ export default function HomePage() {
 
         <div className={activeTab === 'calculator' ? '' : 'hidden'}>
           <FinancialCalculator
+            language={language}
             key={`${selectedSchemeIdForCalc}-${userProfile.estimatedCost}-${userProfile.ownContribution}`}
             preselectedSchemeId={selectedSchemeIdForCalc}
             preselectedProjectCost={userProfile.estimatedCost}
@@ -118,6 +126,7 @@ export default function HomePage() {
 
         <div className={activeTab === 'locator' ? '' : 'hidden'}>
           <PartnerLocatorMap
+            language={language}
             initialSchemeId={selectedSchemeIdForLocator}
             userState={userProfile.state}
             isActive={activeTab === 'locator'}
@@ -135,6 +144,7 @@ export default function HomePage() {
 
         <div className={activeTab === 'documents' ? '' : 'hidden'}>
           <DocumentLocker
+            language={language}
             key={`${selectedSchemeIdForCalc}-${userProfile.hasCasteCertificate}-${userProfile.hasIncomeCertificate}-${userProfile.hasDPR}-${userProfile.hasAdmission}-${userProfile.hasSanitationWorkerEligibility}`}
             userProfile={userProfile}
             selectedSchemeId={selectedSchemeIdForCalc}
@@ -142,12 +152,12 @@ export default function HomePage() {
         </div>
 
         <div className={activeTab === 'upload' ? '' : 'hidden'}>
-          <UploadDocuments isActive={activeTab === 'upload'} />
+          <UploadDocuments isActive={activeTab === 'upload'} language={language} />
         </div>
       </main>
 
       {/* Bottom Footer */}
-      <footer className="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 mt-12">
+      <footer className={`bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 ${activeTab === 'showcase' ? 'mt-0' : 'mt-12'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-6">
             <div className="flex items-center gap-3">
@@ -164,7 +174,7 @@ export default function HomePage() {
                   Scheme Lens
                 </h4>
                 <p className="text-[11px] text-slate-400">
-                  Plan for schemes • Check official sources
+                  {tr(language, 'Plan for schemes • Check official sources')}
                 </p>
               </div>
             </div>
@@ -176,7 +186,7 @@ export default function HomePage() {
                 rel="noreferrer"
                 className="hover:text-sky-300 text-slate-300 flex items-center gap-1 transition-colors"
               >
-                <span>NSFDC Official Portal</span>
+                <span>{tr(language, 'NSFDC Official Portal')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
               <span className="text-slate-600">•</span>
@@ -186,7 +196,7 @@ export default function HomePage() {
                 rel="noreferrer"
                 className="hover:text-sky-300 text-slate-300 flex items-center gap-1 transition-colors"
               >
-                <span>Ministry of Social Justice & Empowerment</span>
+                <span>{tr(language, 'Ministry of Social Justice & Empowerment')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -194,10 +204,10 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
             <p>
-              This is not a government service. It is not run by NSFDC, NSKFDC, or a ministry.
+              {tr(language, 'This is not a government service. It is not run by NSFDC, NSKFDC, or a ministry.')}
             </p>
             <p>
-              Ask the scheme agency to confirm rules, rates, papers, and how to apply.
+              {tr(language, 'Ask the scheme agency to confirm rules, rates, papers, and how to apply.')}
             </p>
           </div>
         </div>

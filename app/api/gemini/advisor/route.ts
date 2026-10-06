@@ -107,6 +107,7 @@ For scheme links, use the source listed with the specific scheme facts above. Th
 
 Instructions for response:
 1. Answer in ${LANGUAGE_NAMES[language]}.
+${language === 'hi' ? 'For Hindi, use conversational Indian Hinglish written mostly in Devanagari: about 70% simple Hindi wording and 30% familiar English terms. Keep it warm and natural, not formal or Sanskrit-heavy; mixed phrases such as “इंडिया”, “लोन”, “EMI”, “documents”, and “apply” are welcome where they sound natural. Preserve official scheme names, agency names, acronyms, rates, amounts, dates, and eligibility conditions accurately.' : ''}
 2. Be concise, warm, and clear.
 3. Do not request Aadhaar numbers, certificate images, bank details, or other sensitive personal data.
 4. Link to the official page for next steps. Never suggest that this independent app submits or routes an application.

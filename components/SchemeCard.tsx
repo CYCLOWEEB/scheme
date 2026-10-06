@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { SchemeMatchResult } from '@/lib/types';
+import { formatLocalizedINR, localizeScheme, tr } from '@/lib/ui-copy';
+import { SCHEMES_DATABASE } from '@/lib/schemes-data';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -15,6 +17,7 @@ import {
 } from 'lucide-react';
 
 interface SchemeCardProps {
+  language: string;
   result: SchemeMatchResult;
   onSelectForCalculator: (result: SchemeMatchResult) => void;
   onSelectForLocator: (schemeId: string) => void;
@@ -24,13 +27,12 @@ interface SchemeCardProps {
   onToggleCompare: (schemeId: string) => void;
 }
 
-export function formatINR(val: number): string {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
-  return `₹${val.toLocaleString('en-IN')}`;
+export function formatINR(val: number, language = 'en'): string {
+  return formatLocalizedINR(val, language);
 }
 
 export default function SchemeCard({
+  language,
   result,
   onSelectForCalculator,
   onSelectForLocator,
@@ -39,7 +41,12 @@ export default function SchemeCard({
   canCompare,
   onToggleCompare,
 }: SchemeCardProps) {
-  const { scheme, matchScore, matchReasons, caveats, recommendedLoanAmount, estimatedMonthlyEmi } = result;
+  const scheme = localizeScheme(result.scheme, language);
+  const matchScore = result.matchScore;
+  const matchReasons = result.matchReasons.map(text => tr(language, text));
+  const caveats = result.caveats.map(text => tr(language, text));
+  const { recommendedLoanAmount, estimatedMonthlyEmi } = result;
+  const t = (text: string) => tr(language, text);
   const canShowLoanEstimate = recommendedLoanAmount !== undefined && estimatedMonthlyEmi !== undefined;
   const programType = scheme.programType ?? 'direct_loan';
   const canShowNsfDcDirectory = scheme.corporation === 'NSFDC' && scheme.channelPartnerTypes.length > 0;
@@ -69,10 +76,10 @@ export default function SchemeCard({
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-sky-100 text-sky-800 border border-sky-200">
-                  {scheme.corporation}
+                  {t(scheme.corporation)}
                 </span>
                 <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100">
-                  {programLabels[programType]}
+                  {t(programLabels[programType])}
                 </span>
                 <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-700">
                   {scheme.categoryTag}
@@ -90,9 +97,9 @@ export default function SchemeCard({
             <div className="text-right shrink-0">
               <div className={`px-2.5 py-1 rounded-lg text-xs font-black shadow-xs inline-flex items-center gap-1 ${getScoreColor(matchScore)}`}>
                 <span>{matchScore}%</span>
-                <span className="text-[10px] font-medium opacity-90">POSSIBLE FIT</span>
+                <span className="text-[10px] font-medium opacity-90">{t('POSSIBLE FIT')}</span>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">Source reviewed {scheme.sourceReviewed}</p>
+              <p className="text-[10px] text-slate-400 mt-1">{t('Source reviewed')} {scheme.sourceReviewed}</p>
             </div>
           </div>
         </div>
@@ -102,19 +109,19 @@ export default function SchemeCard({
           && scheme.concessionalInterestRate !== undefined && scheme.repaymentTenureYears !== undefined ? (
           <div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/70 border-b border-slate-100 text-center py-3 px-2">
             <div>
-              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Percent className="w-3 h-3 text-sky-600" /> Interest rate</span>
-              <p className="text-sm font-extrabold text-sky-700 mt-0.5">{scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} <span className="text-[10px] font-normal text-slate-500">per year</span></p>
+              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Percent className="w-3 h-3 text-sky-600" /> {t('Interest rate')}</span>
+              <p className="text-sm font-extrabold text-sky-700 mt-0.5">{scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} <span className="text-[10px] font-normal text-slate-500">{t('per year')}</span></p>
               {scheme.interestRateNote && <p className="text-[10px] text-slate-500 mt-0.5">{scheme.interestRateNote}</p>}
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Wallet className="w-3 h-3 text-indigo-600" /> Max loan</span>
-              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatINR(scheme.maxLoanAmount)}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Up to {scheme.maxLoanPercentage}% of cost</p>
+              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Wallet className="w-3 h-3 text-indigo-600" /> {t('Max loan')}</span>
+              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatLocalizedINR(scheme.maxLoanAmount, language)}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">{t('Up to')} {scheme.maxLoanPercentage}% {t('of cost')}</p>
             </div>
             <div>
-              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Clock className="w-3 h-3 text-amber-600" /> Payment pause</span>
-              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{scheme.moratoriumTerms ?? `${scheme.moratoriumPeriodMonths ?? 0} Months`}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Tenure: {scheme.repaymentTenureYears} Years</p>
+              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Clock className="w-3 h-3 text-amber-600" /> {t('Payment pause')}</span>
+              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{scheme.moratoriumTerms ?? t(`${scheme.moratoriumPeriodMonths ?? 0} months`)}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">{t('Tenure:')} {scheme.repaymentTenureYears} {t('Years')}</p>
             </div>
           </div>
         ) : scheme.financialHighlights?.length ? (
@@ -135,7 +142,7 @@ export default function SchemeCard({
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[11px] font-semibold text-sky-950 uppercase tracking-wider">
-                Possible loan amount
+                {t('Possible loan amount')}
               </span>
               <p className="text-lg font-black text-slate-900 flex items-center">
                 <IndianRupee className="w-4 h-4 text-sky-700" />
@@ -144,15 +151,15 @@ export default function SchemeCard({
             </div>
             <div className="text-right">
               <span className="text-[11px] font-medium text-slate-600">
-                Monthly estimate
+                {t('Monthly estimate')}
               </span>
               <p className="text-base font-extrabold text-sky-700">
-                ₹{estimatedMonthlyEmi!.toLocaleString('en-IN')}<span className="text-[10px] text-slate-500">/mo</span>
+                ₹{estimatedMonthlyEmi!.toLocaleString('en-IN')}<span className="text-[10px] text-slate-500">{language === 'hi' ? '/महीना' : '/mo'}</span>
               </p>
             </div>
           </div>
 
-          <p className="mt-2 text-[10px] text-slate-500">Estimate only. Ask the lender for your payment plan.</p>
+          <p className="mt-2 text-[10px] text-slate-500">{t('Estimate only. Ask the lender for your payment plan.')}</p>
         </div>
         )}
 
@@ -160,7 +167,7 @@ export default function SchemeCard({
         <div className="p-4 space-y-3">
           <div className="space-y-1.5">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Why it may fit
+              {t('Why it may fit')}
             </h4>
             {matchReasons.slice(0, 3).map((reason, idx) => (
               <div key={idx} className="flex items-start gap-1.5 text-xs text-slate-700">
@@ -185,23 +192,23 @@ export default function SchemeCard({
             {scheme.overview}
           </p>
           <details className="rounded-lg border border-slate-200 bg-white">
-            <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-sky-800">Scheme details</summary>
+            <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-sky-800">{t('Scheme details')}</summary>
             <div className="grid gap-4 border-t border-slate-100 p-3 sm:grid-cols-2">
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Benefits and support</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{t('Benefits and support')}</h4>
                 <ul className="mt-1 space-y-1.5 text-xs leading-relaxed text-slate-700">
                   {scheme.keyBenefits.map(benefit => <li key={benefit}>• {benefit}</li>)}
                 </ul>
               </div>
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Eligibility</h4>
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{t('Eligibility')}</h4>
                 <ul className="mt-1 space-y-1.5 text-xs leading-relaxed text-slate-700">
                   {scheme.eligibilityBullets.map(item => <li key={item}>• {item}</li>)}
                 </ul>
               </div>
             </div>
           </details>
-          <p className="text-[10px] text-slate-500">This is an early check, not approval. Ask the agency about final rules.</p>
+          <p className="text-[10px] text-slate-500">{t('This is an early check, not approval. Ask the agency about final rules.')}</p>
         </div>
       </div>
 
@@ -209,11 +216,11 @@ export default function SchemeCard({
       <div className="p-4 bg-slate-50 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
         <button
           id={`ask-ai-${scheme.id}`}
-          onClick={() => onAskAi(scheme.name)}
+          onClick={() => onAskAi(SCHEMES_DATABASE.find(item => item.id === scheme.id)?.name ?? scheme.name)}
           className="button-motion min-h-10 text-xs text-slate-600 hover:text-sky-700 font-medium flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-sky-50 transition-colors"
         >
           <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-          <span>Ask a question</span>
+          <span>{t('Ask a question')}</span>
         </button>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -229,10 +236,10 @@ export default function SchemeCard({
                 ? 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                 : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
             }`}
-            title={!isCompared && !canCompare ? 'Remove a scheme from the comparison first' : undefined}
+            title={!isCompared && !canCompare ? t('Remove a scheme from the comparison first') : undefined}
           >
             <ArrowLeftRight className="h-3.5 w-3.5" />
-            <span>{isCompared ? 'Added to compare' : 'Compare'}</span>
+            <span>{isCompared ? t('Added to compare') : t('Compare')}</span>
           </button>
           {canShowLoanEstimate && (
           <button
@@ -240,7 +247,7 @@ export default function SchemeCard({
             onClick={() => onSelectForCalculator(result)}
             className="button-motion min-h-10 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 transition-colors"
           >
-            Monthly payment
+            {t('Monthly payment')}
           </button>
           )}
           {canShowNsfDcDirectory && (
@@ -250,7 +257,7 @@ export default function SchemeCard({
             className="button-motion min-h-10 text-xs font-semibold px-3.5 py-2 rounded-lg bg-sky-700 text-white hover:bg-sky-800 transition-colors flex items-center gap-1 shadow-xs"
           >
             <MapPin className="w-3.5 h-3.5" />
-            <span>Find agency</span>
+            <span>{t('Find agency')}</span>
           </button>
           )}
         </div>
@@ -258,7 +265,7 @@ export default function SchemeCard({
       <div className="px-4 pb-3 bg-slate-50">
         {scheme.availabilityNote && <p className="mb-2 text-[10px] leading-relaxed text-amber-800">{scheme.availabilityNote}</p>}
         <a href={scheme.sourceUrl} target="_blank" rel="noreferrer" className="text-[11px] text-sky-700 hover:underline inline-flex items-center gap-1">
-          Official scheme details <span aria-hidden="true">↗</span>
+          {t('Official scheme details')} <span aria-hidden="true">↗</span>
         </a>
       </div>
     </div>

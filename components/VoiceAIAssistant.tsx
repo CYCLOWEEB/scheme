@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import type { UserProfile } from '@/lib/types';
+import { tr } from '@/lib/ui-copy';
 import { 
   Mic, 
   MicOff, 
   Send, 
   Volume2, 
   VolumeX, 
-  Sparkles, 
   HelpCircle, 
   ShieldAlert, 
-  Bot, 
   User, 
   Loader2
 } from 'lucide-react';
@@ -127,6 +127,7 @@ export default function VoiceAIAssistant({
   userProfile,
   isActive = true,
 }: VoiceAIAssistantProps) {
+  const t = (text: string) => tr(language, text);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-msg',
@@ -172,10 +173,10 @@ export default function VoiceAIAssistant({
 
   // Suggested Prompts
   const suggestedPrompts = [
-    { label: 'Could I get a loan?', query: 'Based on the details in my profile, could I get a loan? Which listed schemes might fit, and what do I still need to confirm?' },
-    { label: 'Small business loan', query: 'What is the current NSFDC Micro Finance Scheme loan limit, rate, and repayment period?' },
-    { label: 'Education Loan', query: 'What are the current NSFDC education loan limit and admission requirements?' },
-    { label: 'Find an official agency', query: 'How can I find an authorized channel agency and apply safely?' },
+    { label: 'Could I get a loan?', query: language === 'hi' ? 'मेरी profile details के आधार पर क्या मुझे loan मिल सकता है? कौन-सी listed schemes मेरे लिए fit हो सकती हैं और मुझे क्या confirm करना होगा?' : 'Based on the details in my profile, could I get a loan? Which listed schemes might fit, and what do I still need to confirm?' },
+    { label: 'Small business loan', query: language === 'hi' ? 'NSFDC Micro Finance Scheme की अभी की loan limit, ब्याज दर और repayment period क्या है?' : 'What is the current NSFDC Micro Finance Scheme loan limit, rate, and repayment period?' },
+    { label: 'Education Loan', query: language === 'hi' ? 'NSFDC education loan की अभी की limit और admission की क्या शर्तें हैं?' : 'What are the current NSFDC education loan limit and admission requirements?' },
+    { label: 'Find an official agency', query: language === 'hi' ? 'Authorized channel agency कैसे खोजूँ और सुरक्षित तरीके से apply कैसे करूँ?' : 'How can I find an authorized channel agency and apply safely?' },
   ];
 
   // Auto scroll to bottom of chat
@@ -842,7 +843,7 @@ export default function VoiceAIAssistant({
     }
   };
 
-  const conversationStatus = isListening
+  const conversationStatus = t(isListening
     ? 'Listening'
     : isLoading
       ? 'Thinking'
@@ -850,7 +851,12 @@ export default function VoiceAIAssistant({
         ? 'Generating speech'
         : isSpeaking
           ? 'Speaking'
-          : 'Ready';
+          : 'Ready');
+  const visibleMessages = messages.map(message => message.id === 'welcome-msg'
+    ? { ...message, text: language === 'hi'
+      ? 'नमस्ते! किसी scheme, loan या documents के बारे में पूछें। मैं शुरुआती जानकारी दे सकता हूँ; final फैसला agency करती है।'
+      : 'Namaste! Scheme, loan ya documents ke baare mein poochhein. Main ek pehla idea de sakta hoon; final faisla agency karti hai.' }
+    : message);
   const hasVoiceError = /failed|denied|unavailable|not running|cannot read|could not|no speech|too long|offline|error|not supported|blocked/i.test(voiceStatus);
 
   return (
@@ -858,12 +864,12 @@ export default function VoiceAIAssistant({
       <div className="soft-arrive rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-6">
         <div className="flex items-start gap-4">
           <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-600 to-blue-800 text-white shadow-sm sm:flex">
-            <Sparkles className="h-5 w-5" aria-hidden="true" />
+            <Image src="/icon.png" alt="" width={30} height={30} className="h-8 w-8 rounded-lg object-cover" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-800">
-                SCHEME LENS ADVISOR
+                {t('SCHEME LENS ADVISOR')}
               </span>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500" aria-live="polite">
                 <span className={`h-2 w-2 rounded-full ${isListening ? 'recording-glow bg-rose-500' : isGeneratingSpeech || isLoading || isSpeaking ? 'bg-amber-500' : 'bg-emerald-500'}`} />
@@ -871,31 +877,31 @@ export default function VoiceAIAssistant({
               </span>
             </div>
             <h2 id="assistant-heading" className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-              Ask about a scheme
+              {t('Ask about a scheme')}
             </h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">
-              Speak or type in English or Hindi. Check your words, then tap Send. Replies can be read aloud.
+              {t('Speak or type in English or Hindi. Check your words, then tap Send. Replies can be read aloud.')}
             </p>
             <p className="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">
-              Gemini gets your recording when you tap Send. You can edit the words first.
+              {t('Gemini gets your recording when you tap Send. You can edit the words first.')}
             </p>
             {currentSchemeName && (
               <p className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-800">
                 <HelpCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">Question about {currentSchemeName}</span>
+                <span className="truncate">{t('Question about')} {currentSchemeName}</span>
               </p>
             )}
           </div>
         </div>
         <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900 ring-1 ring-inset ring-amber-200/80">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
-          <p><strong>Stay safe.</strong> Use official channels. Never share OTPs or pay anyone promising approval.</p>
+          <p><strong>{t('Stay safe.')}</strong> {t('Use official channels. Never share OTPs or pay anyone promising approval.')}</p>
         </div>
       </div>
 
-      <div aria-label="Suggested questions" className="flex min-w-0 items-center gap-2">
+      <div aria-label={t('Suggested questions')} className="flex min-w-0 items-center gap-2">
         <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-slate-600 sm:text-xs">
-          <HelpCircle className="h-4 w-4 text-sky-700" aria-hidden="true" /> Try asking
+          <HelpCircle className="h-4 w-4 text-sky-700" aria-hidden="true" /> {t('Try asking')}
         </span>
         <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-none">
           {suggestedPrompts.map((prompt) => (
@@ -904,12 +910,12 @@ export default function VoiceAIAssistant({
               type="button"
               onClick={() => {
                 voiceInputPendingRef.current = false;
-                handleSendMessage(prompt.query, { autoSpeak: false });
+                handleSendMessage(prompt.query, { autoSpeak: false, languageCode: language });
               }}
               disabled={isLoading || isListening || hasPendingVoiceAudio}
               className="button-motion min-h-10 shrink-0 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-2xs transition-colors hover:border-sky-300 hover:bg-sky-50 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {prompt.label}
+              {t(prompt.label)}
             </button>
           ))}
         </div>
@@ -919,29 +925,29 @@ export default function VoiceAIAssistant({
         <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-800">
-              <Bot className="h-4 w-4" aria-hidden="true" />
+              <Image src="/icon.png" alt="" width={18} height={18} className="rounded-sm object-cover" />
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900">Scheme Lens</p>
-              <p className="text-[11px] text-slate-500">Scheme information</p>
+              <p className="text-[11px] text-slate-500">{t('Scheme information')}</p>
             </div>
           </div>
-          <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready to help
+            <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 sm:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t('Ready to help')}
           </span>
         </div>
 
-        <div role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions" className="flex-1 space-y-4 overflow-y-auto bg-slate-50/70 p-4 sm:p-6">
-          {messages.map((message) => (
+        <div role="log" aria-label={t('Conversation')} aria-live="polite" aria-relevant="additions" className="flex-1 space-y-4 overflow-y-auto bg-slate-50/70 p-4 sm:p-6">
+          {visibleMessages.map((message) => (
             <div key={message.id} className={`soft-arrive flex items-end gap-2.5 sm:gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               {message.sender === 'assistant' && (
                 <div className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-700 text-white shadow-xs">
-                  <Bot className="h-4 w-4" aria-hidden="true" />
+                  <Image src="/icon.png" alt="" width={16} height={16} className="rounded-sm object-cover" />
                 </div>
               )}
               <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] sm:px-5 ${message.sender === 'user' ? 'rounded-br-md bg-sky-700 text-white shadow-sm' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800 shadow-2xs'}`}>
                 <p className={`mb-1 text-[10px] font-bold uppercase tracking-wide ${message.sender === 'user' ? 'text-sky-100' : 'text-sky-800'}`}>
-                  {message.sender === 'user' ? 'You' : 'Scheme Lens'}
+                  {message.sender === 'user' ? t('You') : 'Scheme Lens'}
                 </p>
                 <div className="whitespace-pre-line text-sm leading-relaxed sm:text-[15px]">
                   {message.text}
@@ -952,11 +958,11 @@ export default function VoiceAIAssistant({
                       type="button"
                       onClick={() => { void speakText(message.text, message.languageCode || language); }}
                       className="button-motion inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-slate-600 hover:bg-sky-50 hover:text-sky-800"
-                      aria-label={`${isSpeaking || isGeneratingSpeech ? 'Stop reading' : 'Read'} this reply aloud`}
-                      title="Read reply aloud with Gemini"
+                      aria-label={t(`${isSpeaking || isGeneratingSpeech ? 'Stop reading' : 'Read'} this reply aloud`)}
+                      title={t('Read reply aloud with Gemini')}
                     >
                       {isSpeaking || isGeneratingSpeech ? <VolumeX className="h-3.5 w-3.5 text-rose-600" aria-hidden="true" /> : <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />}
-                      <span>{isSpeaking || isGeneratingSpeech ? 'Stop' : 'Listen'}</span>
+                      <span>{isSpeaking || isGeneratingSpeech ? t('Stop') : t('Listen')}</span>
                     </button>
                   </div>
                 )}
@@ -972,11 +978,11 @@ export default function VoiceAIAssistant({
           {isLoading && (
             <div role="status" className="flex items-end gap-2.5 sm:gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-700 text-white">
-                <Bot className="h-4 w-4" aria-hidden="true" />
+                <Image src="/icon.png" alt="" width={16} height={16} className="rounded-sm object-cover" />
               </div>
               <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-2xs">
                 <Loader2 className="h-4 w-4 animate-spin text-sky-700" aria-hidden="true" />
-                <span>One moment…</span>
+                <span>{t('One moment…')}</span>
               </div>
             </div>
           )}
@@ -991,14 +997,14 @@ export default function VoiceAIAssistant({
               onClick={toggleListening}
               disabled={isLoading}
               className={`button-motion inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${isListening ? 'recording-glow border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800'}`}
-              aria-label={isListening ? 'Stop voice recognition' : 'Start voice recognition'}
+              aria-label={t(isListening ? 'Stop voice recognition' : 'Start voice recognition')}
               aria-pressed={isListening}
-              title={isListening ? 'Stop listening and review the transcript' : 'Start browser speech recognition'}
+              title={t(isListening ? 'Stop listening and review the transcript' : 'Start browser speech recognition')}
             >
               {isListening ? <MicOff className="h-4 w-4" aria-hidden="true" /> : <Mic className="h-4 w-4" aria-hidden="true" />}
-                <span>{isListening ? 'Stop' : 'Speak'}</span>
+                <span>{isListening ? t('Stop') : t('Speak')}</span>
             </button>
-            <label htmlFor="chat-query-input" className="sr-only">Your question</label>
+            <label htmlFor="chat-query-input" className="sr-only">{t('Your question')}</label>
             <input
               type="text"
               id="chat-query-input"
@@ -1009,7 +1015,7 @@ export default function VoiceAIAssistant({
                 setInputQuery(event.target.value);
                 setVoiceStatus('');
               }}
-              placeholder={isListening ? 'Listening…' : 'Ask about a scheme or loan'}
+              placeholder={t(isListening ? 'Listening…' : 'Ask about a scheme or loan')}
               className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-500 focus:bg-white sm:px-4"
             />
             <button
@@ -1017,14 +1023,14 @@ export default function VoiceAIAssistant({
               id="send-chat-btn"
               disabled={(!inputQuery.trim() && !hasPendingVoiceAudio) || isLoading}
               className="button-motion inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-700 text-white shadow-xs hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Send question"
-              title="Send question"
+              aria-label={t('Send question')}
+              title={t('Send question')}
             >
               <Send className="h-4 w-4" aria-hidden="true" />
             </button>
           </form>
           <p role="status" aria-live="polite" aria-atomic="true" className={`mt-2 min-h-5 text-xs ${isListening ? 'font-semibold text-rose-700' : isLoading || isGeneratingSpeech ? 'font-medium text-amber-800' : hasVoiceError ? 'text-rose-700' : 'text-slate-500'}`}>
-            {voiceStatus || (isListening ? 'Listening. Stop when done, check your words, then tap Send.' : 'Speak, check your words, then tap Send.')}
+            {voiceStatus ? t(voiceStatus) : t(isListening ? 'Listening. Stop when done, check your words, then tap Send.' : 'Speak, check your words, then tap Send.')}
           </p>
         </div>
       </div>

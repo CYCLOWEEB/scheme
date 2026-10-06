@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import demoImage from '../images/z.jpeg';
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -20,6 +22,7 @@ import {
   getSupabaseBrowserClient,
   MAX_DOCUMENT_SIZE_BYTES,
 } from '@/lib/supabase/client';
+import { tr } from '@/lib/ui-copy';
 
 const DOCUMENT_TYPES = [
   { value: 'aadhaar', label: 'Aadhaar card' },
@@ -97,9 +100,11 @@ function getErrorMessage(error: unknown): string {
 
 interface UploadDocumentsProps {
   isActive: boolean;
+  language: string;
 }
 
-export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
+export default function UploadDocuments({ isActive, language }: UploadDocumentsProps) {
+  const t = (text: string) => tr(language, text);
   const [status, setStatus] = useState<PageStatus>('idle');
   const [documents, setDocuments] = useState<UserDocument[]>([]);
   const [demoDocuments, setDemoDocuments] = useState(FALLBACK_DEMO_DOCUMENTS);
@@ -268,7 +273,7 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
   };
 
   const handleDelete = async (item: UserDocument) => {
-    if (!window.confirm(`Delete “${item.title}” from your private locker?`)) return;
+    if (!window.confirm(t(`Delete “${item.title}” from your private locker?`))) return;
     const client = getSupabaseBrowserClient();
     if (!client) return;
     setBusyDocumentId(item.id);
@@ -297,24 +302,24 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-800">
-              <LockKeyhole className="h-3.5 w-3.5" /> Private document locker
+              <LockKeyhole className="h-3.5 w-3.5" /> {t('Private document locker')}
             </span>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Upload your documents</h2>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{t('Upload your documents')}</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Keep your papers here while you get ready. They stay in your private locker and are not sent to an agency.
+              {t('Keep your papers here while you get ready. They stay in your private locker and are not sent to an agency.')}
             </p>
           </div>
           <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 lg:max-w-sm">
             <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-700" />
-            <p className="text-xs leading-relaxed"><b>Private to this account.</b> Use a device you trust. Clearing browser data may make files hard to get back.</p>
+            <p className="text-xs leading-relaxed"><b>{t('Private to this account.')}</b> {t('Use a device you trust. Clearing browser data may make files hard to get back.')}</p>
           </div>
         </div>
       </section>
 
       {status === 'missing-config' && (
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
-          <h3 className="font-bold">Supabase settings are missing</h3>
-          <p className="mt-1">Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> to the app environment, then restart or redeploy it.</p>
+          <h3 className="font-bold">{t('Supabase settings are missing')}</h3>
+          <p className="mt-1">{t('Add the Supabase public URL and publishable key to the app environment, then restart or redeploy it.')}</p>
         </section>
       )}
 
@@ -322,34 +327,34 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
         <section role="alert" className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
-            <h3 className="font-bold">Could not connect to your private locker</h3>
-            <p className="mt-1">{errorMessage}</p>
-            <a href="https://supabase.com/dashboard/project/btiibgjbhssrwbdodycg/auth/providers" target="_blank" rel="noreferrer" className="mt-2 inline-block font-semibold text-amber-900 underline">Open Supabase sign-in settings</a>
+            <h3 className="font-bold">{t('Could not connect to your private locker')}</h3>
+            <p className="mt-1">{t(errorMessage)}</p>
+            <a href="https://supabase.com/dashboard/project/btiibgjbhssrwbdodycg/auth/providers" target="_blank" rel="noreferrer" className="mt-2 inline-block font-semibold text-amber-900 underline">{t('Open Supabase sign-in settings')}</a>
           </div>
         </section>
       )}
 
       {status === 'loading' && (
         <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-          <LoaderCircle className="h-4 w-4 animate-spin" /> Connecting to your private locker…
+          <LoaderCircle className="h-4 w-4 animate-spin" /> {t('Connecting to your private locker…')}
         </div>
       )}
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
           <div className="mb-4">
-            <h3 className="text-base font-bold text-slate-900">Add a document or photo</h3>
-            <p className="mt-1 text-xs text-slate-500">PDF, JPG, PNG, or WebP · Up to 10 MB per file</p>
+            <h3 className="text-base font-bold text-slate-900">{t('Add a document or photo')}</h3>
+            <p className="mt-1 text-xs text-slate-500">{t('PDF, JPG, PNG, or WebP · Up to 10 MB per file')}</p>
           </div>
 
-          <label htmlFor="document-category" className="mb-1.5 block text-xs font-bold text-slate-700">What are you adding?</label>
+          <label htmlFor="document-category" className="mb-1.5 block text-xs font-bold text-slate-700">{t('What are you adding?')}</label>
           <select
             id="document-category"
             value={selectedType}
             onChange={event => setSelectedType(event.target.value as DocumentType)}
             className="mb-4 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
           >
-            {DOCUMENT_TYPES.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
+            {DOCUMENT_TYPES.map(type => <option key={type.value} value={type.value}>{t(type.label)}</option>)}
           </select>
 
           <label
@@ -357,8 +362,8 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
             className={`flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-300 bg-sky-50/60 px-5 py-8 text-center transition-colors hover:border-sky-500 hover:bg-sky-50 ${status !== 'ready' || isUploading ? 'pointer-events-none opacity-60' : ''}`}
           >
             {isUploading ? <LoaderCircle className="h-8 w-8 animate-spin text-sky-700" /> : <ImagePlus className="h-8 w-8 text-sky-700" />}
-            <span className="mt-3 text-sm font-bold text-slate-900">{isUploading ? uploadProgress : 'Choose files to upload'}</span>
-            <span className="mt-1 text-xs text-slate-600">Add Aadhaar, a photo, certificate, or project paper</span>
+            <span className="mt-3 text-sm font-bold text-slate-900">{isUploading ? t(uploadProgress) : t('Choose files to upload')}</span>
+            <span className="mt-1 text-xs text-slate-600">{t('Add Aadhaar, a photo, certificate, or project paper')}</span>
             <input
               ref={fileInputRef}
               id="document-file-input"
@@ -371,18 +376,25 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
             />
           </label>
 
-          {errorMessage && status !== 'error' && <p role="alert" className="mt-3 flex items-start gap-2 text-xs text-rose-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{errorMessage}</p>}
-          {notice && <p role="status" className="mt-3 flex items-start gap-2 text-xs text-emerald-800"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{notice}</p>}
-          <p className="mt-4 text-[11px] leading-relaxed text-slate-500">Don’t upload original ID papers on a shared device. You may not be able to get these files back later.</p>
+          {errorMessage && status !== 'error' && <p role="alert" className="mt-3 flex items-start gap-2 text-xs text-rose-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{t(errorMessage)}</p>}
+          {notice && <p role="status" className="mt-3 flex items-start gap-2 text-xs text-emerald-800"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{t(notice)}</p>}
+          <div className="mt-5 grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-[10rem_1fr]">
+            <div className="relative aspect-square w-full bg-slate-100"><Image src={demoImage} alt={t('Example photo preview for the upload area')} fill sizes="(max-width: 640px) 100vw, 10rem" className="object-cover" /></div>
+            <div className="p-3">
+              <p className="text-xs font-bold text-slate-800">{t('Upload preview · example image')}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">{t('This image is shown to demonstrate the upload area. It has not been uploaded or added to your locker.')}</p>
+            </div>
+          </div>
+          <p className="mt-4 text-[11px] leading-relaxed text-slate-500">{t('Don’t upload original ID papers on a shared device. You may not be able to get these files back later.')}</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Demo document examples</h3>
-              <p className="mt-1 text-xs text-slate-500">Fake examples only</p>
+              <h3 className="text-base font-bold text-slate-900">{t('Demo document examples')}</h3>
+              <p className="mt-1 text-xs text-slate-500">{t('Fake examples only')}</p>
             </div>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">Demo</span>
+            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('Demo')}</span>
           </div>
           <div className="space-y-3">
             {demoDocuments.map(item => (
@@ -391,9 +403,9 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
                   {item.document_type === 'photo' ? <FileImage className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">{documentTypeLabel(item.document_type)}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{item.description}</p>
+                  <p className="text-sm font-semibold text-slate-900">{t(item.title)}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-500">{t(documentTypeLabel(item.document_type))}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{t(item.description)}</p>
                 </div>
               </div>
             ))}
@@ -404,17 +416,17 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Your uploaded files</h3>
-            <p className="mt-1 text-xs text-slate-500">{documents.length} {documents.length === 1 ? 'file' : 'files'} in your private locker</p>
+            <h3 className="text-base font-bold text-slate-900">{t('Your uploaded files')}</h3>
+            <p className="mt-1 text-xs text-slate-500">{t(`${documents.length} ${documents.length === 1 ? 'file' : 'files'} in your private locker`)}</p>
           </div>
-          {status === 'ready' && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><ShieldCheck className="h-3.5 w-3.5" /> Private storage connected</span>}
+          {status === 'ready' && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><ShieldCheck className="h-3.5 w-3.5" /> {t('Private storage connected')}</span>}
         </div>
 
         {status === 'ready' && documents.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
             <Upload className="mx-auto h-6 w-6 text-slate-400" />
-            <p className="mt-2 text-sm font-semibold text-slate-700">No files added yet</p>
-            <p className="mt-1 text-xs text-slate-500">Your uploads will appear here.</p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">{t('No files added yet')}</p>
+            <p className="mt-1 text-xs text-slate-500">{t('Your uploads will appear here.')}</p>
           </div>
         ) : documents.length > 0 ? (
           <ul className="divide-y divide-slate-100">
@@ -426,15 +438,15 @@ export default function UploadDocuments({ isActive }: UploadDocumentsProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{documentTypeLabel(item.document_type)} · {formatFileSize(item.file_size_bytes)} · {new Date(item.created_at).toLocaleDateString('en-IN')}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{t(documentTypeLabel(item.document_type))} · {formatFileSize(item.file_size_bytes)} · {new Date(item.created_at).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN')}</p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 pl-11 sm:pl-0">
                   <button type="button" onClick={() => void handleDownload(item)} disabled={busyDocumentId === item.id} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                     {busyDocumentId === item.id ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ArrowDownToLine className="h-3.5 w-3.5" />}
-                    Download
+                    {t('Download')}
                   </button>
-                  <button type="button" onClick={() => void handleDelete(item)} disabled={busyDocumentId === item.id} aria-label={`Delete ${item.title}`} className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50 disabled:opacity-50">
+                  <button type="button" onClick={() => void handleDelete(item)} disabled={busyDocumentId === item.id} aria-label={`${t('Delete')} ${item.title}`} className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50 disabled:opacity-50">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

@@ -5,6 +5,7 @@ import { UserProfile, BeneficiaryCategory, ProjectType, SchemeMatchResult } from
 import { matchSchemes } from '@/lib/rule-engine';
 import { VISHWAKARMA_TRADES } from '@/lib/schemes-data';
 import { INDIAN_STATES_AND_UTS } from '@/lib/indian-states';
+import { displayState, tr } from '@/lib/ui-copy';
 import SchemeCard from './SchemeCard';
 import SchemeComparison from './SchemeComparison';
 import { 
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 interface SchemeWizardProps {
+  language: string;
   onSelectForCalculator: (result: SchemeMatchResult) => void;
   onSelectForLocator: (schemeId: string) => void;
   onAskAi: (schemeName: string) => void;
@@ -27,12 +29,14 @@ interface SchemeWizardProps {
 }
 
 export default function SchemeWizard({
+  language,
   onSelectForCalculator,
   onSelectForLocator,
   onAskAi,
   userProfile,
   setUserProfile
 }: SchemeWizardProps) {
+  const t = (text: string) => tr(language, text);
   const [step, setStep] = useState<number>(1);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
   const [comparedSchemeIds, setComparedSchemeIds] = useState<string[]>([]);
@@ -193,21 +197,21 @@ export default function SchemeWizard({
           <div>
             <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full bg-white text-sky-800 text-xs font-semibold border border-sky-200 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-sky-700" /> Independent planning aid
+                <Sparkles className="w-3.5 h-3.5 text-sky-700" /> {t('Independent planning aid')}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
               Scheme Lens
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Add a few details to see possible schemes. This tool does not apply for you or promise a loan or grant.
+              {t('Add a few details to see possible schemes. This tool does not apply for you or promise a loan or grant.')}
             </p>
           </div>
 
           {/* Fictional example profiles */}
           <div className="bg-white border border-slate-200 rounded-xl p-3 shrink-0">
             <span className="text-[11px] font-bold text-amber-800 block mb-2 flex items-center gap-1 uppercase tracking-wider">
-              <UserCheck className="w-3.5 h-3.5 text-amber-600" /> Sample profiles
+              <UserCheck className="w-3.5 h-3.5 text-amber-600" /> {t('Sample profiles')}
             </span>
             <div className="flex flex-wrap gap-1.5">
               <button
@@ -215,35 +219,35 @@ export default function SchemeWizard({
                 onClick={() => loadPreset('nano')}
                 className="button-motion min-h-9 text-xs bg-white hover:bg-sky-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Kirana shop (₹1.2L)
+                {t('Kirana shop (₹1.2L)')}
               </button>
               <button
                 id="preset-women"
                 onClick={() => loadPreset('women_shg')}
                 className="button-motion min-h-9 text-xs bg-white hover:bg-pink-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Woman-owned business (₹1.4L)
+                {t('Woman-owned business (₹1.4L)')}
               </button>
               <button
                 id="preset-edu"
                 onClick={() => loadPreset('education')}
                 className="button-motion min-h-9 text-xs bg-white hover:bg-indigo-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Study abroad (₹25L)
+                {t('Study abroad (₹25L)')}
               </button>
               <button
                 id="preset-sanitation"
                 onClick={() => loadPreset('sanitation')}
                 className="button-motion min-h-9 text-xs bg-white hover:bg-amber-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Sanitation equipment (₹15L)
+                {t('Sanitation equipment (₹15L)')}
               </button>
               <button
                 id="preset-green"
                 onClick={() => loadPreset('green')}
                 className="button-motion min-h-9 text-xs bg-white hover:bg-teal-50 text-slate-700 px-3 py-2 rounded-lg transition-colors font-medium border border-slate-200"
               >
-                Green business example (₹18L)
+                {t('Green business example (₹18L)')}
               </button>
             </div>
           </div>
@@ -263,7 +267,7 @@ export default function SchemeWizard({
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">1</span>
-            <span>Profile</span>
+            <span>{t('Profile')}</span>
           </button>
           <button
             id="step-tab-2"
@@ -275,7 +279,7 @@ export default function SchemeWizard({
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">2</span>
-            <span>Project</span>
+            <span>{t('Project')}</span>
           </button>
           <button
             id="step-tab-3"
@@ -287,7 +291,7 @@ export default function SchemeWizard({
             }`}
           >
             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">3</span>
-            <span>Matches ({matchResults.length})</span>
+            <span>{t('Matches')} ({matchResults.length})</span>
           </button>
         </div>
 
@@ -325,7 +329,7 @@ export default function SchemeWizard({
           className="button-motion min-h-10 shrink-0 text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-slate-100"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset</span>
+          <span>{t('Reset')}</span>
         </button>
       </div>
 
@@ -333,22 +337,22 @@ export default function SchemeWizard({
       {step === 1 && (
         <div className="soft-arrive bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-lg font-bold text-slate-900">Step 1: Beneficiary Category & Location</h3>
-              <p className="text-xs text-slate-500">Choose your group and where you live to find schemes that may fit.</p>
+            <h3 className="text-lg font-bold text-slate-900">{t('Step 1: Beneficiary Category & Location')}</h3>
+              <p className="text-xs text-slate-500">{t('Choose your group and where you live to find schemes that may fit.')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* Full Name */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Applicant name
+                {t('Applicant name')}
               </label>
               <input
                 type="text"
                 id="input-name"
                 value={userProfile.name}
                 onChange={(e) => setUserProfile(p => ({ ...p, name: e.target.value }))}
-                placeholder="e.g. Ramesh Kumar"
+                placeholder={t('e.g. Ramesh Kumar')}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
@@ -356,7 +360,7 @@ export default function SchemeWizard({
             {/* Caste / Beneficiary Category */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Beneficiary Category <span className="text-sky-600 font-bold">*</span>
+                {t('Beneficiary Category')} <span className="text-sky-600 font-bold">*</span>
               </label>
               <select
                 id="input-category"
@@ -367,20 +371,20 @@ export default function SchemeWizard({
                 }}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
               >
-                <option value="">Choose a category</option>
-                <option value="General">General / other category</option>
-                <option value="SC">Scheduled Caste (SC)</option>
-                <option value="ST">Scheduled Tribe (ST)</option>
-                <option value="OBC">Other Backward Class (OBC)</option>
-                <option value="SafaiKaramchari">Eligible sanitation worker</option>
-                <option value="Minority">Notified minority</option>
+                <option value="">{t('Choose a category')}</option>
+                <option value="General">{t('General / other category')}</option>
+                <option value="SC">{t('Scheduled Caste (SC)')}</option>
+                <option value="ST">{t('Scheduled Tribe (ST)')}</option>
+                <option value="OBC">{t('Other Backward Class (OBC)')}</option>
+                <option value="SafaiKaramchari">{t('Eligible sanitation worker')}</option>
+                <option value="Minority">{t('Notified minority')}</option>
               </select>
             </div>
 
             {/* State */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                State / UT
+                {t('State / UT')}
               </label>
               <select
                 id="input-state"
@@ -388,14 +392,14 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, state: e.target.value }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
               >
-                {INDIAN_STATES_AND_UTS.map(state => <option key={state} value={state}>{state}</option>)}
+                {INDIAN_STATES_AND_UTS.map(state => <option key={state} value={state}>{displayState(language, state)}</option>)}
               </select>
             </div>
 
             {/* District */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                District or town
+                {t('District or town')}
               </label>
               <input
                 type="text"
@@ -406,7 +410,7 @@ export default function SchemeWizard({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Age (years)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('Age (years)')}</label>
               <input
                 type="number"
                 id="input-age"
@@ -416,7 +420,7 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, age: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0) }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="mt-1 text-[10px] text-slate-500">Some schemes have an age rule.</p>
+              <p className="mt-1 text-[10px] text-slate-500">{t('Some schemes have an age rule.')}</p>
             </div>
           </div>
 
@@ -426,7 +430,7 @@ export default function SchemeWizard({
               onClick={() => setStep(2)}
               className="button-motion min-h-11 bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
             >
-              <span>Next: Project costs</span>
+              <span>{t('Next: Project costs')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -437,15 +441,15 @@ export default function SchemeWizard({
       {step === 2 && (
         <div className="soft-arrive bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-lg font-bold text-slate-900">Step 2: Project Sector, Income & Cost Estimate</h3>
-            <p className="text-xs text-slate-500">Share your project cost and family income. The agency confirms the final rules.</p>
+            <h3 className="text-lg font-bold text-slate-900">{t('Step 2: Project Sector, Income & Cost Estimate')}</h3>
+            <p className="text-xs text-slate-500">{t('Share your project cost and family income. The agency confirms the final rules.')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* Project / Purpose Type */}
             <div className="md:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                What do you need support for? <span className="text-sky-600 font-bold">*</span>
+                {t('What do you need support for?')} <span className="text-sky-600 font-bold">*</span>
               </label>
               <select
                 id="input-project-type"
@@ -453,15 +457,15 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, projectType: e.target.value as ProjectType, projectTypeProvided: true }))}
                 className="w-full text-sm px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
               >
-                <option value="micro_business">Small business (shop, stall, tailoring)</option>
-                <option value="term_loan_services">Services (repair, printing, clinic, salon; up to ₹50L)</option>
-                <option value="term_loan_mfg">Making goods (food processing, metal work, craft; up to ₹50L)</option>
-                <option value="transport_vehicle">Transport (e-rickshaw, auto, goods vehicle)</option>
-                <option value="green_business">Green business</option>
-                <option value="sanitation_mech">Sanitation equipment (suction trucks, jetting machines; up to ₹15L)</option>
-                <option value="education_domestic">Higher education in India</option>
-                <option value="education_abroad">Higher education abroad</option>
-                <option value="traditional_trade">Artisan or craft work</option>
+                <option value="micro_business">{t('Small business (shop, stall, tailoring)')}</option>
+                <option value="term_loan_services">{t('Services (repair, printing, clinic, salon; up to ₹50L)')}</option>
+                <option value="term_loan_mfg">{t('Making goods (food processing, metal work, craft; up to ₹50L)')}</option>
+                <option value="transport_vehicle">{t('Transport (e-rickshaw, auto, goods vehicle)')}</option>
+                <option value="green_business">{t('Green business')}</option>
+                <option value="sanitation_mech">{t('Sanitation equipment (suction trucks, jetting machines; up to ₹15L)')}</option>
+                <option value="education_domestic">{t('Higher education in India')}</option>
+                <option value="education_abroad">{t('Higher education abroad')}</option>
+                <option value="traditional_trade">{t('Artisan or craft work')}</option>
               </select>
             </div>
 
@@ -469,7 +473,7 @@ export default function SchemeWizard({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  Project or course cost
+                  {t('Project or course cost')}
                 </label>
               <span className="text-xs font-bold text-sky-700 font-mono">
                   ₹{userProfile.estimatedCost.toLocaleString('en-IN')}
@@ -484,14 +488,14 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, estimatedCost: Math.max(0, parseInt(e.target.value) || 0) }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="text-[10px] text-slate-500 mt-1">For study, enter the full fee. NSFDC’s education loan limit is ₹40 lakh or 90% of fees, whichever is lower.</p>
+              <p className="text-[10px] text-slate-500 mt-1">{t('For study, enter the full fee. NSFDC’s education loan limit is ₹40 lakh or 90% of fees, whichever is lower.')}</p>
             </div>
 
             {/* Annual Family Income */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  Annual family income
+                  {t('Annual family income')}
                 </label>
                 <span className={`text-xs font-bold font-mono ${userProfile.category !== 'SC' ? 'text-slate-700' : userProfile.annualFamilyIncome <= 500000 ? 'text-sky-700' : 'text-rose-600'}`}>
                   ₹{userProfile.annualFamilyIncome.toLocaleString('en-IN')}
@@ -506,14 +510,14 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, annualFamilyIncome: Math.max(0, parseInt(e.target.value) || 0), incomeProvided: true }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <p className="text-[10px] text-slate-500 mt-1">For NSFDC SC loans, family income must be ₹5 lakh or less. Other schemes have different rules.</p>
+              <p className="text-[10px] text-slate-500 mt-1">{t('For NSFDC SC loans, family income must be ₹5 lakh or less. Other schemes have different rules.')}</p>
             </div>
 
             {/* Own Equity / Promoter Contribution */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  Your contribution
+                  {t('Your contribution')}
                 </label>
                 <span className="text-xs font-bold text-slate-700 font-mono">
                   ₹{userProfile.ownContribution.toLocaleString('en-IN')}
@@ -528,51 +532,51 @@ export default function SchemeWizard({
                 onChange={(e) => setUserProfile(p => ({ ...p, ownContribution: Math.max(0, parseInt(e.target.value) || 0) }))}
                 className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <span className="text-[10px] text-slate-500">This helps estimate how much of the cost is still left to fund.</span>
+              <span className="text-[10px] text-slate-500">{t('This helps estimate how much of the cost is still left to fund.')}</span>
             </div>
           </div>
 
           <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <summary className="cursor-pointer text-xs font-bold text-slate-800">Additional programme checks <span className="font-normal text-slate-500">(optional)</span></summary>
-            <p className="mb-3 mt-2 text-[10px] text-slate-500">These answers help find schemes for your work or business. Choose “Not sure” if you don’t know.</p>
+            <summary className="cursor-pointer text-xs font-bold text-slate-800">{t('Additional programme checks')} <span className="font-normal text-slate-500">{t('(optional)')}</span></summary>
+            <p className="mb-3 mt-2 text-[10px] text-slate-500">{t('These answers help find schemes for your work or business. Choose “Not sure” if you don’t know.')}</p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="text-xs font-medium text-slate-700">Is this a new enterprise?
+              <label className="text-xs font-medium text-slate-700">{t('Is this a new enterprise?')}
                 <select value={userProfile.newEnterpriseStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, newEnterpriseStatus: e.target.value as UserProfile['newEnterpriseStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
-                  <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No, already operating</option>
+                  <option value="unknown">{t('Not sure')}</option><option value="yes">{t('Yes')}</option><option value="no">{t('No, already operating')}</option>
                 </select>
               </label>
-              <label className="text-xs font-medium text-slate-700">Street-vendor status
+              <label className="text-xs font-medium text-slate-700">{t('Street-vendor status')}
                 <select value={userProfile.streetVendorStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, streetVendorStatus: e.target.value as UserProfile['streetVendorStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
-                  <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option>
+                  <option value="unknown">{t('Not sure')}</option><option value="yes">{t('Yes')}</option><option value="no">{t('No')}</option>
                 </select>
               </label>
-              <label className="text-xs font-medium text-slate-700">Do SC/ST people own more than half of this business?
+              <label className="text-xs font-medium text-slate-700">{t('Do SC/ST people own more than half of this business?')}
                 <select value={userProfile.scStOwnedMseStatus ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, scStOwnedMseStatus: e.target.value as UserProfile['scStOwnedMseStatus'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
-                  <option value="unknown">Not sure</option><option value="yes">Yes</option><option value="no">No</option>
+                  <option value="unknown">{t('Not sure')}</option><option value="yes">{t('Yes')}</option><option value="no">{t('No')}</option>
                 </select>
               </label>
               {userProfile.projectType === 'traditional_trade' && (
-                <label className="text-xs font-medium text-slate-700">Artisan trade
+                <label className="text-xs font-medium text-slate-700">{t('Artisan trade')}
                   <select value={userProfile.traditionalTrade ?? ''} onChange={e => setUserProfile(p => ({ ...p, traditionalTrade: e.target.value || undefined }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
-                    <option value="">Choose a trade</option>{VISHWAKARMA_TRADES.map(trade => <option key={trade} value={trade}>{trade}</option>)}
+                    <option value="">{t('Choose a trade')}</option>{VISHWAKARMA_TRADES.map(trade => <option key={trade} value={trade}>{t(trade)}</option>)}
                   </select>
                 </label>
               )}
               {userProfile.category === 'SC' || userProfile.category === 'ST' ? (
                 <label className="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-700">
                   <input type="checkbox" checked={Boolean(userProfile.hasPreviousTarunRepayment)} onChange={e => setUserProfile(p => ({ ...p, hasPreviousTarunRepayment: e.target.checked }))} className="rounded text-sky-600 focus:ring-sky-500" />
-                  Earlier PMMY Tarun loan paid back in full
+                  {t('Earlier PMMY Tarun loan paid back in full')}
                 </label>
               ) : null}
-              <label className="text-xs font-medium text-slate-700">Project location
+              <label className="text-xs font-medium text-slate-700">{t('Project location')}
                 <select value={userProfile.projectLocationArea ?? 'unknown'} onChange={e => setUserProfile(p => ({ ...p, projectLocationArea: e.target.value as UserProfile['projectLocationArea'] }))} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs">
-                  <option value="unknown">Not sure / not applicable</option><option value="rural">Rural</option><option value="urban">Urban</option>
+                  <option value="unknown">{t('Not sure / not applicable')}</option><option value="rural">{t('Rural')}</option><option value="urban">{t('Urban')}</option>
                 </select>
               </label>
               {['term_loan_mfg', 'term_loan_services', 'micro_business', 'transport_vehicle', 'green_business', 'traditional_trade'].includes(userProfile.projectType) ? (
                 <label className="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-700">
                   <input type="checkbox" checked={Boolean(userProfile.hasEighthGradeEducation)} onChange={e => setUserProfile(p => ({ ...p, hasEighthGradeEducation: e.target.checked }))} className="rounded text-sky-600 focus:ring-sky-500" />
-                  Finished class 8
+                  {t('Finished class 8')}
                 </label>
               ) : null}
             </div>
@@ -582,7 +586,7 @@ export default function SchemeWizard({
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
             <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-sky-600" />
-              Document Readiness Quick-Check:
+              {t('Document Readiness Quick-Check:')}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
@@ -593,7 +597,7 @@ export default function SchemeWizard({
                   onChange={(e) => setUserProfile(p => ({ ...p, hasCasteCertificate: e.target.checked }))}
                   className="rounded text-sky-600 focus:ring-sky-500"
                 />
-              <span>SC/ST certificate available (where applicable)</span>
+              <span>{t('SC/ST certificate available (where applicable)')}</span>
               </label>
 
               <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
@@ -604,7 +608,7 @@ export default function SchemeWizard({
                   onChange={(e) => setUserProfile(p => ({ ...p, hasIncomeCertificate: e.target.checked }))}
                   className="rounded text-sky-600 focus:ring-sky-500"
                 />
-              <span>Income proof available</span>
+              <span>{t('Income proof available')}</span>
               </label>
               {userProfile.projectType.startsWith('education_') && (
                 <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
@@ -615,7 +619,7 @@ export default function SchemeWizard({
                     onChange={(e) => setUserProfile(p => ({ ...p, hasAdmission: e.target.checked }))}
                     className="rounded text-sky-600 focus:ring-sky-500"
                   />
-                <span>Admission confirmed for your course</span>
+                <span>{t('Admission confirmed for your course')}</span>
                 </label>
               )}
               {userProfile.projectType === 'sanitation_mech' && (
@@ -627,7 +631,7 @@ export default function SchemeWizard({
                     onChange={(e) => setUserProfile(p => ({ ...p, hasSanitationWorkerEligibility: e.target.checked }))}
                     className="rounded text-sky-600 focus:ring-sky-500"
                   />
-                  <span>Sanitation-worker eligibility confirmed</span>
+                  <span>{t('Sanitation-worker eligibility confirmed')}</span>
                 </label>
               )}
 
@@ -639,7 +643,7 @@ export default function SchemeWizard({
                   onChange={(e) => setUserProfile(p => ({ ...p, hasDPR: e.target.checked }))}
                   className="rounded text-sky-600 focus:ring-sky-500"
                 />
-                <span>Project report or seller’s quote</span>
+                <span>{t('Project report or seller’s quote')}</span>
               </label>
             </div>
           </div>
@@ -649,7 +653,7 @@ export default function SchemeWizard({
               onClick={() => setStep(1)}
               className="text-slate-600 hover:text-slate-900 text-sm font-semibold px-4 py-2 rounded-xl border border-slate-200"
             >
-              Back
+              {t('Back')}
             </button>
             <button
               id="match-schemes-btn"
@@ -657,7 +661,7 @@ export default function SchemeWizard({
               className="button-motion min-h-11 bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              <span>See schemes ({matchResults.length})</span>
+              <span>{t('See schemes')} ({matchResults.length})</span>
             </button>
           </div>
         </div>
@@ -674,33 +678,33 @@ export default function SchemeWizard({
               </div>
               <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                  Possible schemes for {userProfile.name || 'you'} ({userProfile.category})
+                  {t('Possible schemes for')} {userProfile.name || t('you')} ({userProfile.category})
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Income: ₹{(userProfile.annualFamilyIncome / 100000).toFixed(2)}L • Est. Cost: ₹{(userProfile.estimatedCost / 100000).toFixed(2)}L • {userProfile.state}
+                  {t('Income:')} ₹{(userProfile.annualFamilyIncome / 100000).toFixed(2)}L • {t('Est. Cost:')} ₹{(userProfile.estimatedCost / 100000).toFixed(2)}L • {displayState(language, userProfile.state)}
                 </p>
               </div>
             </div>
 
             <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
               <ArrowLeftRight className="h-4 w-4 shrink-0 text-sky-700" />
-              <span><b>{comparedResults.length}/3</b> picked to compare</span>
+              <span><b>{comparedResults.length}/3</b> {t('picked to compare')}</span>
             </div>
 
             {/* Quick Category Filters */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-xs text-slate-500 flex items-center gap-1 mr-1">
-                <Filter className="w-3.5 h-3.5" /> Filter:
+                <Filter className="w-3.5 h-3.5" /> {t('Filter:')}
               </span>
               {[
-                { id: 'all', label: 'All' },
-                { id: 'Nano', label: 'Micro / Nano' },
-                { id: 'Commercial', label: 'Business loans' },
-                { id: 'Education', label: 'Higher Education' },
-                { id: 'Green', label: 'Green work' },
-                { id: 'Sanitation', label: 'Sanitation' },
-                { id: 'StreetVendor', label: 'Street Vendors' },
-                { id: 'Artisan', label: 'Craft work' },
+                { id: 'all', label: t('All') },
+                { id: 'Nano', label: t('Micro / Nano') },
+                { id: 'Commercial', label: t('Business loans') },
+                { id: 'Education', label: t('Higher Education') },
+                { id: 'Green', label: t('Green work') },
+                { id: 'Sanitation', label: t('Sanitation') },
+                { id: 'StreetVendor', label: t('Street Vendors') },
+                { id: 'Artisan', label: t('Craft work') },
               ].map(f => (
                 <button
                   key={f.id}
@@ -724,6 +728,7 @@ export default function SchemeWizard({
               onRemove={toggleComparison}
               onSelectForCalculator={onSelectForCalculator}
               onSelectForLocator={onSelectForLocator}
+              language={language}
             />
           )}
 
@@ -733,6 +738,7 @@ export default function SchemeWizard({
               <SchemeCard
                 key={result.scheme.id}
                 result={result}
+                language={language}
                 onSelectForCalculator={onSelectForCalculator}
                 onSelectForLocator={onSelectForLocator}
                 onAskAi={onAskAi}
@@ -745,11 +751,11 @@ export default function SchemeWizard({
 
           {matchResults.length === 0 && (
             <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
-              <p className="text-sm font-semibold text-slate-700">No match yet. Try changing your answers.</p>
+              <p className="text-sm font-semibold text-slate-700">{t('No match yet. Try changing your answers.')}</p>
               <p className="mt-2 text-xs text-slate-500">
                 {!userProfile.categoryProvided || !userProfile.projectTypeProvided || userProfile.estimatedCost <= 0
-                  ? 'Choose your group and project, then add the cost.'
-                  : 'No match in this list yet. Rules can vary by scheme and location.'}
+                  ? t('Choose your group and project, then add the cost.')
+                  : t('No match in this list yet. Rules can vary by scheme and location.')}
               </p>
               <div className="mt-3 flex flex-col items-center gap-2">
                 <a
@@ -758,7 +764,7 @@ export default function SchemeWizard({
                   rel="noreferrer"
                   className="text-xs font-semibold text-sky-700 underline"
                 >
-                  Ministry of Social Justice and Empowerment
+                  {t('Ministry of Social Justice and Empowerment')}
                 </a>
                 {selectedCategoryFilter !== 'all' && (
                   <button
@@ -766,7 +772,7 @@ export default function SchemeWizard({
                     onClick={() => setSelectedCategoryFilter('all')}
                     className="text-xs font-semibold text-sky-600 underline"
                   >
-                    Reset Filter
+                    {t('Reset Filter')}
                   </button>
                 )}
               </div>
