@@ -861,49 +861,49 @@ export default function VoiceAIAssistant({
 
   return (
     <section aria-labelledby="assistant-heading" className="space-y-4 sm:space-y-5">
-      <div className="soft-arrive rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-6">
+      <div className="soft-arrive rounded-3xl border border-blue-100 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex items-start gap-4">
-          <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-600 to-blue-800 text-white shadow-sm sm:flex">
+          <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-sm sm:flex">
             <Image src="/icon.png" alt="" width={30} height={30} className="h-8 w-8 rounded-lg object-cover" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-800">
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800">
                 {t('SCHEME LENS ADVISOR')}
               </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500" aria-live="polite">
-                <span className={`h-2 w-2 rounded-full ${isListening ? 'recording-glow bg-rose-500' : isGeneratingSpeech || isLoading || isSpeaking ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600" aria-live="polite">
+                <span className={`h-2 w-2 rounded-full ${isListening ? 'recording-glow bg-rose-500' : isGeneratingSpeech || isLoading || isSpeaking ? 'bg-amber-500' : 'bg-blue-500'}`} />
                 {conversationStatus}
               </span>
             </div>
-            <h2 id="assistant-heading" className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+            <h2 id="assistant-heading" className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
               {t('Ask about a scheme')}
             </h2>
-            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
               {t('Speak or type in English or Hindi. Check your words, then tap Send. Replies can be read aloud.')}
             </p>
-            <p className="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">
+            <p className="mt-1 max-w-3xl text-xs leading-relaxed text-slate-600">
               {t('Gemini gets your recording when you tap Send. You can edit the words first.')}
             </p>
             {currentSchemeName && (
-              <p className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-800">
+              <p className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-800">
                 <HelpCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span className="truncate">{t('Question about')} {currentSchemeName}</span>
               </p>
             )}
           </div>
         </div>
-        <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900 ring-1 ring-inset ring-amber-200/80">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
+        <div className="mt-5 flex items-start gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-950 ring-1 ring-inset ring-blue-100">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" aria-hidden="true" />
           <p><strong>{t('Stay safe.')}</strong> {t('Use official channels. Never share OTPs or pay anyone promising approval.')}</p>
         </div>
       </div>
 
-      <div aria-label={t('Suggested questions')} className="flex min-w-0 items-center gap-2">
-        <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-slate-600 sm:text-xs">
-          <HelpCircle className="h-4 w-4 text-sky-700" aria-hidden="true" /> {t('Try asking')}
+      <div aria-label={t('Suggested questions')} className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-slate-600 sm:text-xs">
+          <HelpCircle className="h-4 w-4 text-blue-700" aria-hidden="true" /> {t('Try asking')}
         </span>
-        <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-none">
+        <div className="flex w-full min-w-0 flex-1 gap-2 overflow-x-auto pb-1 scrollbar-none">
           {suggestedPrompts.map((prompt) => (
             <button
               key={prompt.label}
@@ -913,7 +913,7 @@ export default function VoiceAIAssistant({
                 handleSendMessage(prompt.query, { autoSpeak: false, languageCode: language });
               }}
               disabled={isLoading || isListening || hasPendingVoiceAudio}
-              className="button-motion min-h-10 shrink-0 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-2xs transition-colors hover:border-sky-300 hover:bg-sky-50 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-50"
+              className="button-motion min-h-11 shrink-0 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t(prompt.label)}
             </button>
@@ -921,32 +921,32 @@ export default function VoiceAIAssistant({
         </div>
       </div>
 
-      <div className="soft-arrive flex h-[270px] min-h-[270px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:h-[520px] sm:min-h-0">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 sm:px-5">
+      <div className="soft-arrive flex h-[560px] min-h-[460px] flex-col overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-sm sm:h-[620px]">
+        <div className="flex items-center justify-between border-b border-blue-100 bg-white px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-800">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-800">
               <Image src="/icon.png" alt="" width={18} height={18} className="rounded-sm object-cover" />
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900">Scheme Lens</p>
-              <p className="text-[11px] text-slate-500">{t('Scheme information')}</p>
+              <p className="text-xs text-slate-600">{t('Scheme information')}</p>
             </div>
           </div>
-            <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t('Ready to help')}
+            <span className="hidden items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 sm:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> {t('Ready to help')}
           </span>
         </div>
 
-        <div role="log" aria-label={t('Conversation')} aria-live="polite" aria-relevant="additions" className="flex-1 space-y-4 overflow-y-auto bg-slate-50/70 p-4 sm:p-6">
+        <div role="log" aria-label={t('Conversation')} aria-live="polite" aria-relevant="additions" className="flex-1 space-y-5 overflow-y-auto bg-blue-50/40 p-4 sm:p-6">
           {visibleMessages.map((message) => (
             <div key={message.id} className={`soft-arrive flex items-end gap-2.5 sm:gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               {message.sender === 'assistant' && (
-                <div className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-700 text-white shadow-xs">
+                <div className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white shadow-sm">
                   <Image src="/icon.png" alt="" width={16} height={16} className="rounded-sm object-cover" />
                 </div>
               )}
-              <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] sm:px-5 ${message.sender === 'user' ? 'rounded-br-md bg-sky-700 text-white shadow-sm' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800 shadow-2xs'}`}>
-                <p className={`mb-1 text-[10px] font-bold uppercase tracking-wide ${message.sender === 'user' ? 'text-sky-100' : 'text-sky-800'}`}>
+              <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[78%] sm:px-5 ${message.sender === 'user' ? 'rounded-br-md bg-blue-700 text-white shadow-sm' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800 shadow-sm'}`}>
+                <p className={`mb-1 text-xs font-bold uppercase tracking-wide ${message.sender === 'user' ? 'text-blue-100' : 'text-blue-800'}`}>
                   {message.sender === 'user' ? t('You') : 'Scheme Lens'}
                 </p>
                 <div className="whitespace-pre-line text-sm leading-relaxed sm:text-[15px]">
@@ -957,7 +957,7 @@ export default function VoiceAIAssistant({
                     <button
                       type="button"
                       onClick={() => { void speakText(message.text, message.languageCode || language); }}
-                      className="button-motion inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-slate-600 hover:bg-sky-50 hover:text-sky-800"
+                      className="button-motion inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-800"
                       aria-label={t(`${isSpeaking || isGeneratingSpeech ? 'Stop reading' : 'Read'} this reply aloud`)}
                       title={t('Read reply aloud with Gemini')}
                     >
@@ -968,7 +968,7 @@ export default function VoiceAIAssistant({
                 )}
               </div>
               {message.sender === 'user' && (
-                <div className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700 text-white shadow-xs">
+                <div className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700 text-white shadow-sm">
                   <User className="h-4 w-4" aria-hidden="true" />
                 </div>
               )}
@@ -977,11 +977,11 @@ export default function VoiceAIAssistant({
 
           {isLoading && (
             <div role="status" className="flex items-end gap-2.5 sm:gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-700 text-white">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white">
                 <Image src="/icon.png" alt="" width={16} height={16} className="rounded-sm object-cover" />
               </div>
-              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-2xs">
-                <Loader2 className="h-4 w-4 animate-spin text-sky-700" aria-hidden="true" />
+              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-700" aria-hidden="true" />
                 <span>{t('One moment…')}</span>
               </div>
             </div>
@@ -990,13 +990,13 @@ export default function VoiceAIAssistant({
         </div>
 
         <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
-          <form onSubmit={(event) => { event.preventDefault(); void handleSendMessage(); }} className="flex items-center gap-2">
+          <form onSubmit={(event) => { event.preventDefault(); void handleSendMessage(); }} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex">
             <button
               type="button"
               id="voice-mic-btn"
               onClick={toggleListening}
               disabled={isLoading}
-              className={`button-motion inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${isListening ? 'recording-glow border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800'}`}
+              className={`button-motion inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${isListening ? 'recording-glow border-rose-600 bg-rose-600 text-white' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800'}`}
               aria-label={t(isListening ? 'Stop voice recognition' : 'Start voice recognition')}
               aria-pressed={isListening}
               title={t(isListening ? 'Stop listening and review the transcript' : 'Start browser speech recognition')}
@@ -1016,13 +1016,13 @@ export default function VoiceAIAssistant({
                 setVoiceStatus('');
               }}
               placeholder={t(isListening ? 'Listening…' : 'Ask about a scheme or loan')}
-              className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-500 focus:bg-white sm:px-4"
+              className="col-span-2 row-start-1 min-h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 sm:text-sm"
             />
             <button
               type="submit"
               id="send-chat-btn"
               disabled={(!inputQuery.trim() && !hasPendingVoiceAudio) || isLoading}
-              className="button-motion inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-700 text-white shadow-xs hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-12 button-motion inline-flex h-12 w-12 shrink-0 justify-self-end items-center justify-center rounded-xl bg-blue-700 text-white shadow-sm hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('Send question')}
               title={t('Send question')}
             >

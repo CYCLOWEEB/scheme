@@ -35,17 +35,17 @@ export default function PartnerLocatorMap({
   }, [selectedState, searchQuery]);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+    <div className="space-y-7">
+      <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800">
               <Building2 className="h-3.5 w-3.5" /> {t('Official channel agency directory')}
             </span>
-            <h2 className="mt-3 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
               {t('Find a state channel agency')}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
               {t('This list is from NSFDC. Call first to check the address, open schemes, and how to apply.')}
             </p>
           </div>
@@ -53,7 +53,7 @@ export default function PartnerLocatorMap({
             href="https://nsfdc.nic.in/our-channel-partners"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-800"
+            className="min-h-12 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
           >
             {t('See full agency list')} <ExternalLink className="h-4 w-4" />
           </a>
@@ -67,18 +67,18 @@ export default function PartnerLocatorMap({
 
         <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div>
-            <label htmlFor="directory-state" className="mb-1.5 block text-xs font-bold text-slate-700">{t('State / UT')}</label>
+            <label htmlFor="directory-state" className="mb-2 block text-sm font-semibold text-slate-700">{t('State / UT')}</label>
             <select
               id="directory-state"
               value={selectedState}
               onChange={event => { setStateChoice({ sourceState: userState, value: event.target.value }); setSearchQuery(''); }}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full min-h-12 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100"
             >
               {INDIAN_STATES_AND_UTS.map(state => <option key={state} value={state}>{displayState(language, state)}</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="directory-search" className="mb-1.5 block text-xs font-bold text-slate-700">{t('Search by name or address')}</label>
+            <label htmlFor="directory-search" className="mb-2 block text-sm font-semibold text-slate-700">{t('Search by name or address')}</label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -87,30 +87,30 @@ export default function PartnerLocatorMap({
                 value={searchQuery}
                 onChange={event => setSearchQuery(event.target.value)}
                 placeholder={t('Search this list')}
-                className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full min-h-12 rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100"
               />
             </div>
           </div>
         </div>
 
-        <div className="mt-5 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />
+        <div className="mt-5 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 p-4 text-sm leading-relaxed text-slate-600">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
           <p>{t('This list may be out of date. It does not show open funding or application status. Call the agency or use PM-SURAJ to check.')}</p>
         </div>
       </section>
 
       {listedAgencies.length > 0 ? (
-        <section aria-live="polite" className="space-y-3">
-          <h3 className="text-sm font-bold text-slate-700">{t(`${listedAgencies.length} ${listedAgencies.length === 1 ? 'agency' : 'agencies'} in ${displayState(language, selectedState)}`)}</h3>
+        <section aria-live="polite" className="space-y-5">
+          <h3 className="text-base font-bold text-slate-700">{t(`${listedAgencies.length} ${listedAgencies.length === 1 ? 'agency' : 'agencies'} in ${displayState(language, selectedState)}`)}</h3>
           <AgencyLocationsMap agencies={listedAgencies} isActive={isActive} language={language} />
           <div className="grid gap-4 md:grid-cols-2">
             {listedAgencies.map((agency, index) => (
-              <article key={`${agency.name}-${index}`} className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+              <article key={`${agency.name}-${index}`} className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm transition-colors hover:border-blue-300 sm:p-6">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700"><Building2 className="h-4 w-4" /></div>
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700"><Building2 className="h-4 w-4" /></div>
                   <div>
-                    <h4 className="text-sm font-bold leading-snug text-slate-900">{agency.name}</h4>
-                    <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-slate-600"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />{agency.address}</p>
+                    <h4 className="text-base font-bold leading-relaxed text-slate-900">{agency.name}</h4>
+                    <p className="mt-2 flex items-start gap-2 text-sm leading-relaxed text-slate-600"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />{agency.address}</p>
                   </div>
                 </div>
               </article>
@@ -125,8 +125,8 @@ export default function PartnerLocatorMap({
       )}
 
       <div className="flex flex-wrap gap-3 text-xs">
-        <a href={OFFICIAL_SCA_SOURCE} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-sky-700 hover:underline">{t('Open the source agency list')} <ExternalLink className="h-3.5 w-3.5" /></a>
-        {scheme?.corporation !== 'NSKFDC' && <a href="https://pmsuraj.dosje.gov.in" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-sky-700 hover:underline">{t('PM SURAJ application portal')} <ExternalLink className="h-3.5 w-3.5" /></a>}
+        <a href={OFFICIAL_SCA_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-100 bg-white px-4 py-2 font-semibold text-blue-700 hover:border-blue-300 hover:bg-blue-50">{t('Open the source agency list')} <ExternalLink className="h-3.5 w-3.5" /></a>
+        {scheme?.corporation !== 'NSKFDC' && <a href="https://pmsuraj.dosje.gov.in" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-100 bg-white px-4 py-2 font-semibold text-blue-700 hover:border-blue-300 hover:bg-blue-50">{t('PM SURAJ application portal')} <ExternalLink className="h-3.5 w-3.5" /></a>}
       </div>
     </div>
   );

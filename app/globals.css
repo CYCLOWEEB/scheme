@@ -1,14 +1,156 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-nunito-sans), var(--font-noto-sans-devanagari), "Segoe UI", "Nirmala UI", system-ui, sans-serif;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 550;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 650;
+  --font-weight-black: 650;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.65;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.65;
+  --text-base--line-height: 1.65;
+  --leading-relaxed: 1.75;
+  --tracking-tight: -0.0125em;
+  --tracking-wide: 0.015em;
+  --tracking-wider: 0.04em;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background: #f8faff;
+  scrollbar-gutter: stable;
+  scroll-padding-top: 14rem;
+}
+
 body {
-  font-family: "Segoe UI Variable", "Segoe UI", "Nirmala UI", system-ui, sans-serif;
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.65;
   font-kerning: normal;
+  font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
 }
 
+.app-shell .font-mono {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-shell :is(b, strong) {
+  font-weight: 600;
+}
+
+html:lang(hi) :is(h1, h2, h3, h4, p, label, button, summary, [class*='tracking-']) {
+  letter-spacing: normal;
+}
+
+button,
+select,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+select,
+summary {
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  accent-color: #2563eb;
+}
+
+input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.app-shell {
+  background: linear-gradient(180deg, #f4f8ff 0%, #f8faff 30rem, #fff 100%);
+}
+
+.app-main > div:not(.hidden) {
+  animation: soft-arrive 320ms ease-out both;
+}
+
+.goal-intro {
+  background:
+    radial-gradient(circle at 96% 20%, rgb(191 219 254 / 48%), transparent 37%),
+    linear-gradient(115deg, #eff6ff, #f5f9ff 60%, #eaf2ff);
+}
+
+.lens-illustration {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 170px;
+  height: 140px;
+}
+
+.lens-orbit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 112px;
+  border: 1px solid rgb(147 197 253 / 70%);
+  border-radius: 32px;
+  background: rgb(255 255 255 / 80%);
+  box-shadow: 0 12px 40px -12px rgb(37 99 235 / 16%), 0 0 0 12px rgb(255 255 255 / 32%), 0 0 0 25px rgb(255 255 255 / 16%);
+  transform: rotate(-8deg);
+}
+
+.lens-orbit svg {
+  transform: rotate(8deg);
+}
+
+.lens-spark,
+.lens-check {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 5px 15px rgb(37 99 235 / 8%);
+}
+
+.lens-spark {
+  top: 5px;
+  right: 4px;
+  transform: rotate(9deg);
+}
+
+.lens-check {
+  bottom: 0;
+  left: 9px;
+  transform: rotate(-6deg);
+}
+
+.goal-card {
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+@media (max-width: 639px) {
+  .app-main :is(input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea) {
+    font-size: 16px;
+  }
+}
+
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid #0284c7 !important;
+  outline: 3px solid #2563eb !important;
   outline-offset: 3px;
 }
 

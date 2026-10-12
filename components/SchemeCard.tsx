@@ -58,48 +58,48 @@ export default function SchemeCard({
   } as const;
 
   const getScoreColor = (score: number) => {
-    if (score >= 85) return 'bg-sky-600 text-white';
-    if (score >= 70) return 'bg-blue-600 text-white';
-    if (score >= 50) return 'bg-amber-500 text-white';
-    return 'bg-slate-600 text-white';
+    if (score >= 85) return 'border-sky-200 bg-sky-50 text-sky-800';
+    if (score >= 70) return 'border-blue-200 bg-blue-50 text-blue-800';
+    if (score >= 50) return 'border-sky-100 bg-white text-sky-700';
+    return 'border-slate-200 bg-white text-slate-600';
   };
 
   return (
     <div 
       id={`scheme-card-${scheme.id}`}
-      className="lift-on-hover bg-white rounded-xl border border-slate-200 shadow-xs hover:border-sky-200 overflow-hidden flex flex-col justify-between"
+      className={`scheme-card lift-on-hover flex min-w-0 flex-col justify-between overflow-hidden rounded-3xl border bg-white shadow-sm ${isCompared ? 'border-sky-400 ring-2 ring-sky-100' : 'border-sky-100 hover:border-sky-300'}`}
     >
       <div>
         {/* Card Header with Corporation & Match Score */}
-        <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-sky-50/40 via-white to-slate-50">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-sky-100 text-sky-800 border border-sky-200">
+        <div className="border-b border-slate-100 bg-white p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 basis-[230px]">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-800">
                   {t(scheme.corporation)}
                 </span>
-                <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100">
+                <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800">
                   {t(programLabels[programType])}
                 </span>
-                <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-700">
+                <span className="rounded-full border border-slate-100 bg-white px-2.5 py-1 text-xs font-medium text-slate-500">
                   {scheme.categoryTag}
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+              <h3 className="text-lg font-bold leading-snug tracking-tight text-slate-900 sm:text-xl">
                 {scheme.name}
               </h3>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">
+              <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500">
                 {scheme.hindiName}
               </p>
             </div>
 
             {/* Match Badge */}
-            <div className="text-right shrink-0">
-              <div className={`px-2.5 py-1 rounded-lg text-xs font-black shadow-xs inline-flex items-center gap-1 ${getScoreColor(matchScore)}`}>
-                <span>{matchScore}%</span>
-                <span className="text-[10px] font-medium opacity-90">{t('POSSIBLE FIT')}</span>
+            <div className="shrink-0">
+              <div className={`inline-flex min-w-24 flex-col items-center gap-0.5 rounded-2xl border px-3 py-2.5 ${getScoreColor(matchScore)}`}>
+                <span className="text-xl font-bold tracking-tight">{matchScore}%</span>
+                <span className="text-[10px] font-semibold tracking-wide">{t('POSSIBLE FIT')}</span>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">{t('Source reviewed')} {scheme.sourceReviewed}</p>
+              <p className="mt-2 max-w-28 text-[10px] leading-relaxed text-slate-500">{t('Source reviewed')} {scheme.sourceReviewed}</p>
             </div>
           </div>
         </div>
@@ -107,30 +107,30 @@ export default function SchemeCard({
         {/* Scheme terms adapt to loans, guarantees, subsidies, and business support. */}
         {scheme.maxLoanPercentage !== undefined && scheme.maxLoanAmount !== undefined
           && scheme.concessionalInterestRate !== undefined && scheme.repaymentTenureYears !== undefined ? (
-          <div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/70 border-b border-slate-100 text-center py-3 px-2">
-            <div>
-              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Percent className="w-3 h-3 text-sky-600" /> {t('Interest rate')}</span>
-              <p className="text-sm font-extrabold text-sky-700 mt-0.5">{scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} <span className="text-[10px] font-normal text-slate-500">{t('per year')}</span></p>
-              {scheme.interestRateNote && <p className="text-[10px] text-slate-500 mt-0.5">{scheme.interestRateNote}</p>}
+          <div className="scheme-terms grid grid-cols-1 divide-y divide-sky-100 border-b border-slate-100 bg-sky-50/30 px-5 py-3 text-center sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-3">
+            <div className="px-2 py-2">
+              <span className="text-xs text-slate-500 flex items-center justify-center gap-1"><Percent className="w-3 h-3 text-sky-600" /> {t('Interest rate')}</span>
+              <p className="text-base font-bold text-sky-700 mt-0.5">{scheme.interestRateLabel ?? `${scheme.concessionalInterestRate}%`} <span className="text-[10px] font-normal text-slate-500">{t('per year')}</span></p>
+              {scheme.interestRateNote && <p className="mt-1 text-xs leading-relaxed text-slate-500">{scheme.interestRateNote}</p>}
             </div>
-            <div>
-              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Wallet className="w-3 h-3 text-indigo-600" /> {t('Max loan')}</span>
-              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{formatLocalizedINR(scheme.maxLoanAmount, language)}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">{t('Up to')} {scheme.maxLoanPercentage}% {t('of cost')}</p>
+            <div className="px-2 py-2">
+              <span className="text-xs text-slate-500 flex items-center justify-center gap-1"><Wallet className="w-3 h-3 text-sky-600" /> {t('Max loan')}</span>
+              <p className="text-base font-bold text-slate-900 mt-0.5">{formatLocalizedINR(scheme.maxLoanAmount, language)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('Up to')} {scheme.maxLoanPercentage}% {t('of cost')}</p>
             </div>
-            <div>
-              <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1"><Clock className="w-3 h-3 text-amber-600" /> {t('Payment pause')}</span>
-              <p className="text-sm font-extrabold text-slate-900 mt-0.5">{scheme.moratoriumTerms ?? t(`${scheme.moratoriumPeriodMonths ?? 0} months`)}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">{t('Tenure:')} {scheme.repaymentTenureYears} {t('Years')}</p>
+            <div className="px-2 py-2">
+              <span className="text-xs text-slate-500 flex items-center justify-center gap-1"><Clock className="w-3 h-3 text-sky-600" /> {t('Payment pause')}</span>
+              <p className="text-base font-bold text-slate-900 mt-0.5">{scheme.moratoriumTerms ?? t(`${scheme.moratoriumPeriodMonths ?? 0} months`)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('Tenure:')} {scheme.repaymentTenureYears} {t('Years')}</p>
             </div>
           </div>
         ) : scheme.financialHighlights?.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 bg-slate-50/70 border-b border-slate-100 py-3 px-3">
+          <div className="grid grid-cols-1 divide-y divide-sky-100 border-b border-slate-100 bg-sky-50/30 px-3 py-3 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {scheme.financialHighlights.map(item => (
               <div key={item.label} className="px-2 py-2 text-center">
-                <span className="text-[11px] text-slate-500">{item.label}</span>
-                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{item.value}</p>
-                {item.note && <p className="text-[10px] leading-relaxed text-slate-500 mt-0.5">{item.note}</p>}
+                <span className="text-xs text-slate-500">{item.label}</span>
+                <p className="text-base font-bold text-slate-900 mt-0.5">{item.value}</p>
+                {item.note && <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.note}</p>}
               </div>
             ))}
           </div>
@@ -138,13 +138,13 @@ export default function SchemeCard({
 
         {/* Estimated EMI & Interest Savings Highlight */}
         {canShowLoanEstimate && (
-        <div className="p-4 bg-sky-50/60 border-b border-sky-100/80">
-          <div className="flex items-center justify-between">
+        <div className="border-b border-sky-100 bg-sky-50/70 p-5 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <span className="text-[11px] font-semibold text-sky-950 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-sky-900">
                 {t('Possible loan amount')}
               </span>
-              <p className="text-lg font-black text-slate-900 flex items-center">
+              <p className="mt-1 flex items-center text-2xl font-bold tracking-tight text-slate-900">
                 <IndianRupee className="w-4 h-4 text-sky-700" />
                 {recommendedLoanAmount!.toLocaleString('en-IN')}
               </p>
@@ -153,33 +153,33 @@ export default function SchemeCard({
               <span className="text-[11px] font-medium text-slate-600">
                 {t('Monthly estimate')}
               </span>
-              <p className="text-base font-extrabold text-sky-700">
+              <p className="mt-1 text-xl font-bold tracking-tight text-sky-700">
                 ₹{estimatedMonthlyEmi!.toLocaleString('en-IN')}<span className="text-[10px] text-slate-500">{language === 'hi' ? '/महीना' : '/mo'}</span>
               </p>
             </div>
           </div>
 
-          <p className="mt-2 text-[10px] text-slate-500">{t('Estimate only. Ask the lender for your payment plan.')}</p>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">{t('Estimate only. Ask the lender for your payment plan.')}</p>
         </div>
         )}
 
         {/* Match Reasons & Caveats */}
-        <div className="p-4 space-y-3">
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <div className="space-y-5 p-5 sm:p-6">
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-slate-900">
               {t('Why it may fit')}
             </h4>
             {matchReasons.slice(0, 3).map((reason, idx) => (
-              <div key={idx} className="flex items-start gap-1.5 text-xs text-slate-700">
-                <CheckCircle2 className="w-3.5 h-3.5 text-sky-600 shrink-0 mt-0.5" />
+              <div key={idx} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-600">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
                 <span>{reason}</span>
               </div>
             ))}
             {caveats.length > 0 && (
-              <div className="mt-2 pt-1 border-t border-slate-100">
+              <div className="mt-4 space-y-2 rounded-xl border border-sky-100 bg-sky-50/50 p-3">
                 {caveats.slice(0, 2).map((cav, idx) => (
-                  <div key={idx} className="flex items-start gap-1.5 text-xs text-amber-700 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <div key={idx} className="flex items-start gap-2 text-xs leading-relaxed text-sky-900">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />
                     <span>{cav}</span>
                   </div>
                 ))}
@@ -188,52 +188,52 @@ export default function SchemeCard({
           </div>
 
           {/* Key Overview */}
-          <p className="text-xs text-slate-600 line-clamp-2 pt-1">
+          <p className="line-clamp-2 text-sm leading-relaxed text-slate-500">
             {scheme.overview}
           </p>
-          <details className="rounded-lg border border-slate-200 bg-white">
-            <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-sky-800">{t('Scheme details')}</summary>
-            <div className="grid gap-4 border-t border-slate-100 p-3 sm:grid-cols-2">
+          <details className="rounded-xl border border-sky-100 bg-white">
+            <summary className="min-h-11 cursor-pointer px-4 py-3 text-sm font-semibold text-sky-800 hover:bg-sky-50/50">{t('Scheme details')}</summary>
+            <div className="grid gap-5 border-t border-sky-100 p-4 sm:grid-cols-2">
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{t('Benefits and support')}</h4>
+                <h4 className="text-xs font-semibold text-slate-700">{t('Benefits and support')}</h4>
                 <ul className="mt-1 space-y-1.5 text-xs leading-relaxed text-slate-700">
                   {scheme.keyBenefits.map(benefit => <li key={benefit}>• {benefit}</li>)}
                 </ul>
               </div>
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{t('Eligibility')}</h4>
+                <h4 className="text-xs font-semibold text-slate-700">{t('Eligibility')}</h4>
                 <ul className="mt-1 space-y-1.5 text-xs leading-relaxed text-slate-700">
                   {scheme.eligibilityBullets.map(item => <li key={item}>• {item}</li>)}
                 </ul>
               </div>
             </div>
           </details>
-          <p className="text-[10px] text-slate-500">{t('This is an early check, not approval. Ask the agency about final rules.')}</p>
+          <p className="text-xs leading-relaxed text-slate-500">{t('This is an early check, not approval. Ask the agency about final rules.')}</p>
         </div>
       </div>
 
       {/* Action Footer */}
-      <div className="p-4 bg-slate-50 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-sky-100 bg-sky-50/30 px-5 py-4 sm:px-6">
         <button
           id={`ask-ai-${scheme.id}`}
           onClick={() => onAskAi(SCHEMES_DATABASE.find(item => item.id === scheme.id)?.name ?? scheme.name)}
-          className="button-motion min-h-10 text-xs text-slate-600 hover:text-sky-700 font-medium flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-sky-50 transition-colors"
+          className="button-motion flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-sky-700 transition-colors hover:bg-sky-100"
         >
           <Sparkles className="w-3.5 h-3.5 text-sky-600" />
           <span>{t('Ask a question')}</span>
         </button>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             id={`compare-scheme-${scheme.id}`}
             type="button"
             aria-pressed={isCompared}
             disabled={!isCompared && !canCompare}
             onClick={() => onToggleCompare(scheme.id)}
-            className={`button-motion min-h-10 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${isCompared
+            className={`button-motion inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors ${isCompared
               ? 'border-sky-700 bg-sky-700 text-white hover:bg-sky-800'
               : canCompare
-                ? 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                ? 'border-sky-200 bg-white text-sky-800 hover:bg-sky-50'
                 : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
             }`}
             title={!isCompared && !canCompare ? t('Remove a scheme from the comparison first') : undefined}
@@ -245,7 +245,7 @@ export default function SchemeCard({
           <button
             id={`calc-scheme-${scheme.id}`}
             onClick={() => onSelectForCalculator(result)}
-            className="button-motion min-h-10 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 transition-colors"
+            className="button-motion min-h-11 rounded-xl border border-sky-200 bg-white px-3.5 py-2 text-xs font-semibold text-sky-800 transition-colors hover:bg-sky-50"
           >
             {t('Monthly payment')}
           </button>
@@ -254,7 +254,7 @@ export default function SchemeCard({
           <button
             id={`locate-partner-${scheme.id}`}
             onClick={() => onSelectForLocator(scheme.id)}
-            className="button-motion min-h-10 text-xs font-semibold px-3.5 py-2 rounded-lg bg-sky-700 text-white hover:bg-sky-800 transition-colors flex items-center gap-1 shadow-xs"
+            className="button-motion flex min-h-11 items-center gap-2 rounded-xl bg-sky-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-sky-800"
           >
             <MapPin className="w-3.5 h-3.5" />
             <span>{t('Find agency')}</span>
@@ -262,9 +262,9 @@ export default function SchemeCard({
           )}
         </div>
       </div>
-      <div className="px-4 pb-3 bg-slate-50">
-        {scheme.availabilityNote && <p className="mb-2 text-[10px] leading-relaxed text-amber-800">{scheme.availabilityNote}</p>}
-        <a href={scheme.sourceUrl} target="_blank" rel="noreferrer" className="text-[11px] text-sky-700 hover:underline inline-flex items-center gap-1">
+      <div className="bg-sky-50/30 px-5 pb-5 sm:px-6">
+        {scheme.availabilityNote && <p className="mb-3 text-xs leading-relaxed text-sky-900">{scheme.availabilityNote}</p>}
+        <a href={scheme.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-8 items-center gap-1.5 text-xs font-medium text-sky-700 hover:underline">
           {t('Official scheme details')} <span aria-hidden="true">↗</span>
         </a>
       </div>

@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import Image, { type StaticImageData } from 'next/image';
 import demoImage from '../images/z.jpeg';
+import aadhaarImage from '../images/adhaar.jpg';
+import profileImage from '../images/profile.jpg';
+import incomeImage from '../images/income_certificate.jpg';
 import {
   AlertCircle,
   ArrowDownToLine,
@@ -35,6 +38,12 @@ const DOCUMENT_TYPES = [
 
 type DocumentType = (typeof DOCUMENT_TYPES)[number]['value'];
 type PageStatus = 'idle' | 'loading' | 'ready' | 'missing-config' | 'error';
+
+const DEMO_DOCUMENT_IMAGES: Partial<Record<DocumentType, StaticImageData>> = {
+  aadhaar: aadhaarImage,
+  photo: profileImage,
+  income_certificate: incomeImage,
+};
 
 interface UserDocument {
   id: string;
@@ -145,7 +154,11 @@ export default function UploadDocuments({ isActive, language }: UploadDocumentsP
       setUserId(user.id);
       setDocuments((userResult.data ?? []) as UserDocument[]);
       if (!demoResult.error && demoResult.data?.length) {
-        setDemoDocuments(demoResult.data as DemoDocument[]);
+        const remoteExamples = demoResult.data as DemoDocument[];
+        setDemoDocuments([
+          ...remoteExamples,
+          ...FALLBACK_DEMO_DOCUMENTS.filter(item => !remoteExamples.some(example => example.document_type === item.document_type)),
+        ].sort((a, b) => a.sort_order - b.sort_order));
       }
       setStatus('ready');
     } catch (error) {
@@ -297,20 +310,20 @@ export default function UploadDocuments({ isActive, language }: UploadDocumentsP
   };
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+    <div className="upload-workspace space-y-6">
+      <section className="overflow-hidden rounded-[1.75rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/60 to-sky-50 p-5 shadow-sm sm:p-7 lg:p-8">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-8">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800">
               <LockKeyhole className="h-3.5 w-3.5" /> {t('Private document locker')}
             </span>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{t('Upload your documents')}</h2>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{t('Upload your documents')}</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
               {t('Keep your papers here while you get ready. They stay in your private locker and are not sent to an agency.')}
             </p>
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 lg:max-w-sm">
-            <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-700" />
+          <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white/80 p-4 text-blue-950 shadow-sm sm:p-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50"><ShieldCheck className="h-5 w-5 text-blue-700" aria-hidden="true" /></span>
             <p className="text-xs leading-relaxed"><b>{t('Private to this account.')}</b> {t('Use a device you trust. Clearing browser data may make files hard to get back.')}</p>
           </div>
         </div>
@@ -340,30 +353,35 @@ export default function UploadDocuments({ isActive, language }: UploadDocumentsP
         </div>
       )}
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-          <div className="mb-4">
-            <h3 className="text-base font-bold text-slate-900">{t('Add a document or photo')}</h3>
-            <p className="mt-1 text-xs text-slate-500">{t('PDF, JPG, PNG, or WebP · Up to 10 MB per file')}</p>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]">
+        <section className="min-w-0 rounded-[1.75rem] border border-blue-100 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
+          <div className="mb-6 flex items-start gap-3 border-b border-slate-100 pb-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Upload className="h-5 w-5" aria-hidden="true" /></span>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">{t('Add a document or photo')}</h3>
+              <p className="mt-1 text-xs text-slate-600">{t('PDF, JPG, PNG, or WebP · Up to 10 MB per file')}</p>
+            </div>
           </div>
 
-          <label htmlFor="document-category" className="mb-1.5 block text-xs font-bold text-slate-700">{t('What are you adding?')}</label>
+          <label htmlFor="document-category" className="mb-2 block text-sm font-semibold text-slate-700">{t('What are you adding?')}</label>
           <select
             id="document-category"
             value={selectedType}
             onChange={event => setSelectedType(event.target.value as DocumentType)}
-            className="mb-4 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+            className="mb-5 w-full min-h-12 rounded-xl border border-blue-100 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
             {DOCUMENT_TYPES.map(type => <option key={type.value} value={type.value}>{t(type.label)}</option>)}
           </select>
 
           <label
             htmlFor="document-file-input"
-            className={`flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-300 bg-sky-50/60 px-5 py-8 text-center transition-colors hover:border-sky-500 hover:bg-sky-50 ${status !== 'ready' || isUploading ? 'pointer-events-none opacity-60' : ''}`}
+            className={`group flex min-h-60 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-gradient-to-b from-blue-50/70 to-white px-4 py-7 text-center transition-colors hover:border-blue-500 hover:from-blue-50 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100 ${status !== 'ready' || isUploading ? 'pointer-events-none opacity-60' : ''}`}
           >
-            {isUploading ? <LoaderCircle className="h-8 w-8 animate-spin text-sky-700" /> : <ImagePlus className="h-8 w-8 text-sky-700" />}
-            <span className="mt-3 text-sm font-bold text-slate-900">{isUploading ? t(uploadProgress) : t('Choose files to upload')}</span>
-            <span className="mt-1 text-xs text-slate-600">{t('Add Aadhaar, a photo, certificate, or project paper')}</span>
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-100 bg-white shadow-sm">
+              {isUploading ? <LoaderCircle className="h-8 w-8 animate-spin text-blue-700" /> : <ImagePlus className="h-8 w-8 text-blue-700" />}
+            </span>
+            <span className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-blue-700">{isUploading ? t(uploadProgress) : t('Choose files to upload')}</span>
+            <span className="mt-3 max-w-64 text-xs leading-relaxed text-slate-600">{t('Add Aadhaar, a photo, certificate, or project paper')}</span>
             <input
               ref={fileInputRef}
               id="document-file-input"
@@ -377,76 +395,79 @@ export default function UploadDocuments({ isActive, language }: UploadDocumentsP
           </label>
 
           {errorMessage && status !== 'error' && <p role="alert" className="mt-3 flex items-start gap-2 text-xs text-rose-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{t(errorMessage)}</p>}
-          {notice && <p role="status" className="mt-3 flex items-start gap-2 text-xs text-emerald-800"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{t(notice)}</p>}
-          <div className="mt-5 grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-[10rem_1fr]">
-            <div className="relative aspect-square w-full bg-slate-100"><Image src={demoImage} alt={t('Example photo preview for the upload area')} fill sizes="(max-width: 640px) 100vw, 10rem" className="object-cover" /></div>
-            <div className="p-3">
+          {notice && <p role="status" className="mt-3 flex items-start gap-2 text-xs text-blue-800"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{t(notice)}</p>}
+          <div className="mt-5 grid grid-cols-[5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 sm:grid-cols-[6rem_minmax(0,1fr)]">
+            <div className="relative min-h-28 w-full border-r border-slate-200 bg-white"><Image src={DEMO_DOCUMENT_IMAGES[selectedType] ?? demoImage} alt={t('Example photo preview for the upload area')} fill sizes="6rem" className="object-contain p-2" /></div>
+            <div className="self-center p-3">
               <p className="text-xs font-bold text-slate-800">{t('Upload preview · example image')}</p>
               <p className="mt-1 text-xs leading-relaxed text-slate-600">{t('This image is shown to demonstrate the upload area. It has not been uploaded or added to your locker.')}</p>
             </div>
           </div>
-          <p className="mt-4 text-[11px] leading-relaxed text-slate-500">{t('Don’t upload original ID papers on a shared device. You may not be able to get these files back later.')}</p>
-        </div>
+          <p className="mt-5 border-t border-slate-100 pt-4 text-xs leading-relaxed text-slate-600">{t('Don’t upload original ID papers on a shared device. You may not be able to get these files back later.')}</p>
+        </section>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">{t('Demo document examples')}</h3>
-              <p className="mt-1 text-xs text-slate-500">{t('Fake examples only')}</p>
-            </div>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('Demo')}</span>
-          </div>
-          <div className="space-y-3">
-            {demoDocuments.map(item => (
-              <div key={item.id} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-                <div className="rounded-lg bg-white p-2 text-sky-700 shadow-xs">
-                  {item.document_type === 'photo' ? <FileImage className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+        <div className="min-w-0 space-y-6">
+              <section className="rounded-[1.75rem] border border-blue-100 bg-white p-5 shadow-sm sm:p-6">
+                <div className="mb-5 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">{t('Demo document examples')}</h3>
+                    <p className="mt-1 text-xs text-slate-600">{t('Fake examples only')}</p>
+                  </div>
+                  <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">{t('Demo')}</span>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">{t(item.title)}</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">{t(documentTypeLabel(item.document_type))}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{t(item.description)}</p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {demoDocuments.map(item => {
+                    const exampleImage = DEMO_DOCUMENT_IMAGES[item.document_type];
+                    return (
+                      <article key={item.id} className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        <div className="relative aspect-[4/3] w-full border-b border-slate-200 bg-slate-50/80">
+                          {exampleImage ? <Image src={exampleImage} alt={t(item.title)} fill sizes="(max-width: 639px) calc(100vw - 5rem), (max-width: 1023px) 30vw, 20vw" className="object-contain p-3" /> : <div className="flex h-full items-center justify-center text-blue-600">{item.document_type === 'photo' ? <FileImage className="h-10 w-10" aria-hidden="true" /> : <FileText className="h-10 w-10" aria-hidden="true" />}</div>}
+                        </div>
+                        <div className="flex flex-1 flex-col p-4">
+                          <p className="text-sm font-semibold leading-snug text-slate-900">{t(item.title)}</p>
+                          <p className="mt-2 text-xs font-medium text-blue-700">{t(documentTypeLabel(item.document_type))}</p>
+                          <p className="mt-3 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-600">{t(item.description)}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
-        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+      <section className="rounded-[1.75rem] border border-blue-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-5 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('Your uploaded files')}</h3>
-            <p className="mt-1 text-xs text-slate-500">{t(`${documents.length} ${documents.length === 1 ? 'file' : 'files'} in your private locker`)}</p>
+            <h3 className="text-lg font-bold text-slate-900">{t('Your uploaded files')}</h3>
+            <p className="mt-1 text-xs text-slate-600">{t(`${documents.length} ${documents.length === 1 ? 'file' : 'files'} in your private locker`)}</p>
           </div>
-          {status === 'ready' && <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><ShieldCheck className="h-3.5 w-3.5" /> {t('Private storage connected')}</span>}
+          {status === 'ready' && <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700"><ShieldCheck className="h-3.5 w-3.5" /> {t('Private storage connected')}</span>}
         </div>
 
         {status === 'ready' && documents.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
-            <Upload className="mx-auto h-6 w-6 text-slate-400" />
-            <p className="mt-2 text-sm font-semibold text-slate-700">{t('No files added yet')}</p>
-            <p className="mt-1 text-xs text-slate-500">{t('Your uploads will appear here.')}</p>
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-blue-50/30 px-4 py-7 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-blue-100 bg-white"><Upload className="h-5 w-5 text-blue-500" aria-hidden="true" /></span>
+            <p className="mt-3 text-sm font-semibold text-slate-700">{t('No files added yet')}</p>
+            <p className="mt-1 text-xs text-slate-600">{t('Your uploads will appear here.')}</p>
           </div>
         ) : documents.length > 0 ? (
-          <ul className="divide-y divide-slate-100">
+          <ul className="space-y-3">
             {documents.map(item => (
-              <li key={item.id} className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+              <li key={item.id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="rounded-lg bg-sky-50 p-2 text-sky-700">
+                  <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
                     {item.mime_type.startsWith('image/') ? <FileImage className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{t(documentTypeLabel(item.document_type))} · {formatFileSize(item.file_size_bytes)} · {new Date(item.created_at).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN')}</p>
+                    <p className="mt-1 break-words text-xs leading-relaxed text-slate-600">{t(documentTypeLabel(item.document_type))} · {formatFileSize(item.file_size_bytes)} · {new Date(item.created_at).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN')}</p>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2 pl-11 sm:pl-0">
-                  <button type="button" onClick={() => void handleDownload(item)} disabled={busyDocumentId === item.id} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                <div className="flex shrink-0 items-center gap-2 pl-11 xl:pl-0">
+                  <button type="button" onClick={() => void handleDownload(item)} disabled={busyDocumentId === item.id} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                     {busyDocumentId === item.id ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ArrowDownToLine className="h-3.5 w-3.5" />}
                     {t('Download')}
                   </button>
-                  <button type="button" onClick={() => void handleDelete(item)} disabled={busyDocumentId === item.id} aria-label={`${t('Delete')} ${item.title}`} className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-2 text-rose-700 hover:bg-rose-50 disabled:opacity-50">
+                  <button type="button" onClick={() => void handleDelete(item)} disabled={busyDocumentId === item.id} aria-label={`${t('Delete')} ${item.title}`} className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 p-2 text-rose-700 hover:bg-rose-50 disabled:opacity-50">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -455,6 +476,8 @@ export default function UploadDocuments({ isActive, language }: UploadDocumentsP
           </ul>
         ) : null}
       </section>
+        </div>
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ const HI: Record<string, string> = {
   'Primary navigation': 'मुख्य navigation',
   'Lens': 'लेंस',
   'Find schemes': 'योजनाएँ खोजें',
+  'Get schemes': 'योजनाएँ देखें',
   'Calculator': 'कैलकुलेटर',
   'Find agency': 'एजेंसी खोजें',
   'Official Channel Directory': 'ऑफिशियल एजेंसी डायरेक्टरी',

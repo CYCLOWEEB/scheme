@@ -24,6 +24,10 @@ export default function HomePage() {
     document.documentElement.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : language;
   }, [language]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
+
   // Beneficiary Profile State
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '',
@@ -81,7 +85,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+    <div className="app-shell min-h-screen flex flex-col text-slate-900">
       {/* Navbar with Sticky Tabs */}
       <Navbar
         activeTab={activeTab}
@@ -91,10 +95,11 @@ export default function HomePage() {
       />
 
       {/* Main Container */}
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
+      <main className="app-main mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         <div className={activeTab === 'showcase' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
         <DemoStudio
             language={language}
+            onGetSchemes={() => setActiveTab('wizard')}
             onLoadProfile={handleLoadDemoProfile}
             onSelectForCalculator={(result) => handleSelectForCalculator(result)}
             onSelectForLocator={handleSelectForLocator}
@@ -157,44 +162,44 @@ export default function HomePage() {
       </main>
 
       {/* Bottom Footer */}
-      <footer className={`bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 ${activeTab === 'showcase' ? 'mt-0' : 'mt-12'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <footer className={`bg-white text-slate-500 text-xs py-8 border-t border-blue-100 ${activeTab === 'showcase' ? 'mt-0' : 'mt-12'}`}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 space-y-5">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border-b border-blue-50 pb-5">
             <div className="flex items-center gap-3">
               <Image 
                 src="/icon.png" 
                 alt="Scheme Lens"
                 width={32}
                 height={32}
-                className="w-8 h-8 rounded-lg object-cover ring-1 ring-sky-400/40" 
+                className="w-10 h-10 rounded-xl object-cover ring-1 ring-blue-100"
                 referrerPolicy="no-referrer"
               />
               <div>
-                <h4 className="text-white font-bold text-sm">
+                <h4 className="text-blue-950 font-bold text-base">
                   Scheme Lens
                 </h4>
-                <p className="text-[11px] text-slate-400">
+                <p className="mt-1 text-xs text-slate-500">
                   {tr(language, 'Plan for schemes • Check official sources')}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-xs">
               <a
                 href="https://nsfdc.nic.in"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-sky-300 text-slate-300 flex items-center gap-1 transition-colors"
+                className="hover:text-blue-800 text-blue-700 flex items-center gap-1.5 transition-colors"
               >
                 <span>{tr(language, 'NSFDC Official Portal')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
-              <span className="text-slate-600">•</span>
+              <span className="text-blue-200">•</span>
               <a
                 href="https://socialjustice.gov.in"
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-sky-300 text-slate-300 flex items-center gap-1 transition-colors"
+                className="hover:text-blue-800 text-blue-700 flex items-center gap-1.5 transition-colors"
               >
                 <span>{tr(language, 'Ministry of Social Justice & Empowerment')}</span>
                 <ExternalLink className="w-3 h-3" />
@@ -202,7 +207,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 text-xs leading-6 text-slate-500">
             <p>
               {tr(language, 'This is not a government service. It is not run by NSFDC, NSKFDC, or a ministry.')}
             </p>
