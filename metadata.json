@@ -1,0 +1,10 @@
+{
+  "name": "Scheme Lens AI",
+  "description": "Explore schemes with AI explanations, comparisons, repayment guidance, document planning, and voice assistance, grounded in source-linked scheme facts.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

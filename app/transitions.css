@@ -1,0 +1,56 @@
+/* Capture the content only: the header and background stay live during navigation. */
+:root { view-transition-name: none; }
+.app-main { view-transition-name: section-content; }
+
+/* Keep taps available, including another destination selected mid-transition. */
+::view-transition { pointer-events: none; }
+::view-transition-group(section-content) { animation: none; }
+::view-transition-image-pair(section-content) { isolation: isolate; }
+::view-transition-old(section-content) {
+  animation: section-leave 180ms ease-out both;
+  mix-blend-mode: normal;
+}
+::view-transition-new(section-content) {
+  animation: section-arrive 520ms 50ms cubic-bezier(.22, 1, .36, 1) both;
+  mix-blend-mode: normal;
+}
+@keyframes section-leave { to { opacity: 0; transform: translateX(calc(var(--section-direction, 1) * -14px)) scale(.992); } }
+@keyframes section-arrive {
+  from { opacity: 0; transform: translateX(calc(var(--section-direction, 1) * 28px)) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Browsers without snapshots still get a short entrance, with no remounted forms. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-section-navigation='fallback'] .fluid-experience .tab-panel:not(.hidden) { animation: section-arrive 520ms cubic-bezier(.22, 1, .36, 1) backwards; }
+}
+html[data-section-transition='active'] .tab-panel:not(.hidden) { animation: none; }
+
+/* After navigation, use one content transition instead of stacking the old reveals. */
+html[data-section-navigation] .tab-panel :is(.entry-icon, .intro-badge, .intro-title, .intro-copy, .intro-action, .word-rise, .wizard-intro, .wizard-panel, .profile-card, .agency-directory-panel) {
+  animation: none !important;
+  opacity: 1;
+  translate: none;
+}
+html[data-section-navigation] .tab-panel :is(.intro-title, .intro-copy, .word-rise) { transform: none; filter: none; }
+
+.skip-to-content {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  z-index: 100;
+  padding: 10px 18px;
+  border: 2px solid #176397;
+  border-radius: 10px;
+  background: #f7fcff;
+  color: #193a54;
+  font-weight: 700;
+  transform: translateY(-180%);
+}
+.skip-to-content:focus { transform: none; }
+.app-main:focus { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(section-content), ::view-transition-new(section-content) { animation: none; }
+}
+@media print { .skip-to-content { display: none; } }

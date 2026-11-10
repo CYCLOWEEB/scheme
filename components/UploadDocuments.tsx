@@ -1,0 +1,483 @@
+'use client';
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Image, { type StaticImageData } from 'next/image';
+import demoImage from '../images/z.jpeg';
+import aadhaarImage from '../images/adhaar.jpg';
+import profileImage from '../images/profile.jpg';
+import incomeImage from '../images/income_certificate.jpg';
+import {
+  AlertCircle,
+  ArrowDownToLine,
+  CheckCircle2,
+  FileImage,
+  FileText,
+  ImagePlus,
+  LoaderCircle,
+  LockKeyhole,
+  ShieldCheck,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import {
+  DOCUMENTS_BUCKET,
+  getOrCreateAnonymousUser,
+  getSupabaseBrowserClient,
+  MAX_DOCUMENT_SIZE_BYTES,
+} from '@/lib/supabase/client';
+import { tr } from '@/lib/ui-copy';
+
+const DOCUMENT_TYPES = [
+  { value: 'aadhaar', label: 'Aadhaar card' },
+  { value: 'photo', label: 'Profile photo' },
+  { value: 'income_certificate', label: 'Income certificate' },
+  { value: 'caste_certificate', label: 'Caste certificate' },
+  { value: 'project_report', label: 'Project report / DPR' },
+  { value: 'other', label: 'Other document' },
+] as const;
+
+type DocumentType = (typeof DOCUMENT_TYPES)[number]['value'];
+type PageStatus = 'idle' | 'loading' | 'ready' | 'missing-config' | 'error';
+
+const DEMO_DOCUMENT_IMAGES: Partial<Record<DocumentType, StaticImageData>> = {
+  aadhaar: aadhaarImage,
+  photo: profileImage,
+  income_certificate: incomeImage,
+};
+
+interface UserDocument {
+  id: string;
+  user_id: string;
+  title: string;
+  document_type: DocumentType;
+  storage_path: string;
+  mime_type: string;
+  file_size_bytes: number;
+  created_at: string;
+}
+
+interface DemoDocument {
+  id: string;
+  title: string;
+  document_type: DocumentType;
+  description: string;
+  sort_order: number;
+}
+
+const FALLBACK_DEMO_DOCUMENTS: DemoDocument[] = [
+  {
+    id: 'demo-aadhaar',
+    title: 'Aadhaar card example',
+    document_type: 'aadhaar',
+    description: 'Fictional demo label only. No real Aadhaar number or identity data.',
+    sort_order: 10,
+  },
+  {
+    id: 'demo-photo',
+    title: 'Profile photo example',
+    document_type: 'photo',
+    description: 'Placeholder example only. It contains no photo of a real person.',
+    sort_order: 20,
+  },
+  {
+    id: 'demo-income',
+    title: 'Income certificate example',
+    document_type: 'income_certificate',
+    description: 'Fictional demo label only. It is not issued by a government agency.',
+    sort_order: 30,
+  },
+];
+
+const ALLOWED_MIME_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
+
+function documentTypeLabel(type: DocumentType): string {
+  return DOCUMENT_TYPES.find(item => item.value === type)?.label ?? 'Other document';
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+  if (/anonymous.*disabled|disabled.*anonymous/i.test(message)) {
+    return 'Anonymous sign-in is disabled. Enable it in Supabase Authentication → Sign In / Providers → Anonymous Sign-Ins, then reload this tab.';
+  }
+  return message;
+}
+
+interface UploadDocumentsProps {
+  isActive: boolean;
+  language: string;
+}
+
+export default function UploadDocuments({ isActive, language }: UploadDocumentsProps) {
+  const t = (text: string) => tr(language, text);
+  const [status, setStatus] = useState<PageStatus>('idle');
+  const [documents, setDocuments] = useState<UserDocument[]>([]);
+  const [demoDocuments, setDemoDocuments] = useState(FALLBACK_DEMO_DOCUMENTS);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<DocumentType>('aadhaar');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [notice, setNotice] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [busyDocumentId, setBusyDocumentId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadDocuments = useCallback(async (isCurrent: () => boolean) => {
+    setStatus('loading');
+    setErrorMessage('');
+    const client = getSupabaseBrowserClient();
+    if (!client) {
+      setStatus('missing-config');
+      return;
+    }
+
+    try {
+      const user = await getOrCreateAnonymousUser(client);
+      const [userResult, demoResult] = await Promise.all([
+        client
+          .from('user_documents')
+          .select('id,user_id,title,document_type,storage_path,mime_type,file_size_bytes,created_at')
+          .order('created_at', { ascending: false }),
+        client
+          .from('demo_document_examples')
+          .select('id,title,document_type,description,sort_order')
+          .order('sort_order', { ascending: true }),
+      ]);
+
+      if (userResult.error) throw userResult.error;
+      if (!isCurrent()) return;
+
+      setUserId(user.id);
+      setDocuments((userResult.data ?? []) as UserDocument[]);
+      if (!demoResult.error && demoResult.data?.length) {
+        const remoteExamples = demoResult.data as DemoDocument[];
+        setDemoDocuments([
+          ...remoteExamples,
+          ...FALLBACK_DEMO_DOCUMENTS.filter(item => !remoteExamples.some(example => example.document_type === item.document_type)),
+        ].sort((a, b) => a.sort_order - b.sort_order));
+      }
+      setStatus('ready');
+    } catch (error) {
+      if (!isCurrent()) return;
+      setErrorMessage(getErrorMessage(error));
+      setStatus('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isActive) return;
+    let current = true;
+    const scheduleId = window.setTimeout(() => {
+      void loadDocuments(() => current);
+    }, 0);
+    return () => {
+      current = false;
+      window.clearTimeout(scheduleId);
+    };
+  }, [isActive, loadDocuments]);
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = '';
+    if (!files.length) return;
+
+    const client = getSupabaseBrowserClient();
+    if (!client || !userId) {
+      setErrorMessage('Your private document session is not ready yet. Wait for it to connect and try again.');
+      return;
+    }
+
+    setErrorMessage('');
+    setNotice('');
+    setIsUploading(true);
+    let uploadedCount = 0;
+    const failures: string[] = [];
+
+    for (const [index, file] of files.entries()) {
+      setUploadProgress(`Adding ${index + 1} of ${files.length}…`);
+
+      if (!ALLOWED_MIME_TYPES.has(file.type)) {
+        failures.push(`${file.name}: choose a PDF, JPG, PNG, or WebP file.`);
+        continue;
+      }
+      if (file.size < 1 || file.size > MAX_DOCUMENT_SIZE_BYTES) {
+        failures.push(`${file.name}: each file must be 10 MB or smaller.`);
+        continue;
+      }
+
+      const cleanTitle = file.name.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 150) || 'Document';
+      const safeFileName = cleanTitle
+        .normalize('NFKD')
+        .replace(/[^a-zA-Z0-9._-]+/g, '_')
+        .replace(/^[_.]+/, '')
+        .slice(0, 120) || 'document';
+      const storagePath = `${userId}/${crypto.randomUUID()}-${safeFileName}`;
+
+      const { error: uploadError } = await client.storage
+        .from(DOCUMENTS_BUCKET)
+        .upload(storagePath, file, { contentType: file.type, upsert: false, cacheControl: '0' });
+
+      if (uploadError) {
+        failures.push(`${file.name}: ${uploadError.message}`);
+        continue;
+      }
+
+      const { error: rowError } = await client.from('user_documents').insert({
+        user_id: userId,
+        title: cleanTitle,
+        document_type: selectedType,
+        storage_path: storagePath,
+        mime_type: file.type,
+        file_size_bytes: file.size,
+      });
+
+      if (rowError) {
+        await client.storage.from(DOCUMENTS_BUCKET).remove([storagePath]);
+        failures.push(`${file.name}: ${rowError.message}`);
+        continue;
+      }
+
+      uploadedCount += 1;
+    }
+
+    try {
+      const { data, error } = await client
+        .from('user_documents')
+        .select('id,user_id,title,document_type,storage_path,mime_type,file_size_bytes,created_at')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocuments((data ?? []) as UserDocument[]);
+    } catch (error) {
+      if (uploadedCount > 0) setNotice('Your file was saved, but the list could not refresh. Reload this tab to see it.');
+      else failures.push(getErrorMessage(error));
+    }
+
+    if (failures.length) setErrorMessage(failures.join(' '));
+    else if (uploadedCount) setNotice(`${uploadedCount} ${uploadedCount === 1 ? 'file was' : 'files were'} added to your private locker.`);
+    setIsUploading(false);
+    setUploadProgress('');
+  };
+
+  const handleDownload = async (item: UserDocument) => {
+    const client = getSupabaseBrowserClient();
+    if (!client) return;
+    setBusyDocumentId(item.id);
+    setErrorMessage('');
+    try {
+      const { data, error } = await client.storage.from(DOCUMENTS_BUCKET).download(item.storage_path);
+      if (error) throw error;
+      const objectUrl = URL.createObjectURL(data);
+      const link = window.document.createElement('a');
+      link.href = objectUrl;
+      link.download = item.title;
+      window.document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setBusyDocumentId(null);
+    }
+  };
+
+  const handleDelete = async (item: UserDocument) => {
+    if (!window.confirm(t(`Delete “${item.title}” from your private locker?`))) return;
+    const client = getSupabaseBrowserClient();
+    if (!client) return;
+    setBusyDocumentId(item.id);
+    setErrorMessage('');
+    setNotice('');
+    try {
+      const { error: storageError } = await client.storage
+        .from(DOCUMENTS_BUCKET)
+        .remove([item.storage_path]);
+      if (storageError) throw storageError;
+
+      const { error: rowError } = await client.from('user_documents').delete().eq('id', item.id);
+      if (rowError) throw rowError;
+      setDocuments(current => current.filter(document => document.id !== item.id));
+      setNotice('Document deleted from your private locker.');
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setBusyDocumentId(null);
+    }
+  };
+
+  return (
+    <div className="upload-workspace entry-stack space-y-6">
+      <section className="overflow-hidden rounded-[1.75rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/60 to-sky-50 p-5 shadow-sm sm:p-7 lg:p-8">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-8">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800">
+              <LockKeyhole className="entry-icon h-3.5 w-3.5" /> {t('Private document locker')}
+            </span>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{t('Upload your documents')}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              {t('Keep your papers here while you get ready. They stay in your private locker and are not sent to an agency.')}
+            </p>
+          </div>
+          <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white/80 p-4 text-blue-950 shadow-sm sm:p-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50"><ShieldCheck className="entry-icon h-5 w-5 text-blue-700" aria-hidden="true" /></span>
+            <p className="text-xs leading-relaxed"><b>{t('Private to this account.')}</b> {t('Use a device you trust. Clearing browser data may make files hard to get back.')}</p>
+          </div>
+        </div>
+      </section>
+
+      {status === 'missing-config' && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+          <h3 className="font-bold">{t('Supabase settings are missing')}</h3>
+          <p className="mt-1">{t('Add the Supabase public URL and publishable key to the app environment, then restart or redeploy it.')}</p>
+        </section>
+      )}
+
+      {status === 'error' && (
+        <section role="alert" className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <h3 className="font-bold">{t('Could not connect to your private locker')}</h3>
+            <p className="mt-1">{t(errorMessage)}</p>
+            <a href="https://supabase.com/dashboard/project/btiibgjbhssrwbdodycg/auth/providers" target="_blank" rel="noreferrer" className="mt-2 inline-block font-semibold text-amber-900 underline">{t('Open Supabase sign-in settings')}</a>
+          </div>
+        </section>
+      )}
+
+      {status === 'loading' && (
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          <LoaderCircle className="h-4 w-4 animate-spin" /> {t('Connecting to your private locker…')}
+        </div>
+      )}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]">
+        <section className="min-w-0 rounded-[1.75rem] border border-blue-100 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
+          <div className="mb-6 flex items-start gap-3 border-b border-slate-100 pb-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Upload className="h-5 w-5" aria-hidden="true" /></span>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">{t('Add a document or photo')}</h3>
+              <p className="mt-1 text-xs text-slate-600">{t('PDF, JPG, PNG, or WebP · Up to 10 MB per file')}</p>
+            </div>
+          </div>
+
+          <label htmlFor="document-category" className="mb-2 block text-sm font-semibold text-slate-700">{t('What are you adding?')}</label>
+          <select
+            id="document-category"
+            value={selectedType}
+            onChange={event => setSelectedType(event.target.value as DocumentType)}
+            className="mb-5 w-full min-h-12 rounded-xl border border-blue-100 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          >
+            {DOCUMENT_TYPES.map(type => <option key={type.value} value={type.value}>{t(type.label)}</option>)}
+          </select>
+
+          <label
+            htmlFor="document-file-input"
+            className={`group flex min-h-60 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-200 bg-gradient-to-b from-blue-50/70 to-white px-4 py-7 text-center transition-colors hover:border-blue-500 hover:from-blue-50 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100 ${status !== 'ready' || isUploading ? 'pointer-events-none opacity-60' : ''}`}
+          >
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-100 bg-white shadow-sm">
+              {isUploading ? <LoaderCircle className="h-8 w-8 animate-spin text-blue-700" /> : <ImagePlus className="h-8 w-8 text-blue-700" />}
+            </span>
+            <span className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-blue-700">{isUploading ? t(uploadProgress) : t('Choose files to upload')}</span>
+            <span className="mt-3 max-w-64 text-xs leading-relaxed text-slate-600">{t('Add Aadhaar, a photo, certificate, or project paper')}</span>
+            <input
+              ref={fileInputRef}
+              id="document-file-input"
+              type="file"
+              multiple
+              accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp"
+              onChange={handleUpload}
+              disabled={status !== 'ready' || isUploading}
+              className="sr-only"
+            />
+          </label>
+
+          {errorMessage && status !== 'error' && <p role="alert" className="mt-3 flex items-start gap-2 text-xs text-rose-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{t(errorMessage)}</p>}
+          {notice && <p role="status" className="mt-3 flex items-start gap-2 text-xs text-blue-800"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{t(notice)}</p>}
+          <div className="mt-5 grid grid-cols-[5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 sm:grid-cols-[6rem_minmax(0,1fr)]">
+            <div className="relative min-h-28 w-full border-r border-slate-200 bg-white"><Image src={DEMO_DOCUMENT_IMAGES[selectedType] ?? demoImage} alt={t('Example photo preview for the upload area')} fill sizes="6rem" className="object-contain p-2" /></div>
+            <div className="self-center p-3">
+              <p className="text-xs font-bold text-slate-800">{t('Upload preview · example image')}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">{t('This image is shown to demonstrate the upload area. It has not been uploaded or added to your locker.')}</p>
+            </div>
+          </div>
+          <p className="mt-5 border-t border-slate-100 pt-4 text-xs leading-relaxed text-slate-600">{t('Don’t upload original ID papers on a shared device. You may not be able to get these files back later.')}</p>
+        </section>
+
+        <div className="min-w-0 space-y-6">
+              <section className="rounded-[1.75rem] border border-blue-100 bg-white p-5 shadow-sm sm:p-6">
+                <div className="mb-5 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">{t('Demo document examples')}</h3>
+                    <p className="mt-1 text-xs text-slate-600">{t('Fake examples only')}</p>
+                  </div>
+                  <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">{t('Demo')}</span>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {demoDocuments.map(item => {
+                    const exampleImage = DEMO_DOCUMENT_IMAGES[item.document_type];
+                    return (
+                      <article key={item.id} className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        <div className="relative aspect-[4/3] w-full border-b border-slate-200 bg-slate-50/80">
+                          {exampleImage ? <Image src={exampleImage} alt={t(item.title)} fill sizes="(max-width: 639px) calc(100vw - 5rem), (max-width: 1023px) 30vw, 20vw" className="object-contain p-3" /> : <div className="flex h-full items-center justify-center text-blue-600">{item.document_type === 'photo' ? <FileImage className="h-10 w-10" aria-hidden="true" /> : <FileText className="h-10 w-10" aria-hidden="true" />}</div>}
+                        </div>
+                        <div className="flex flex-1 flex-col p-4">
+                          <p className="text-sm font-semibold leading-snug text-slate-900">{t(item.title)}</p>
+                          <p className="mt-2 text-xs font-medium text-blue-700">{t(documentTypeLabel(item.document_type))}</p>
+                          <p className="mt-3 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-600">{t(item.description)}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+
+      <section className="rounded-[1.75rem] border border-blue-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-5 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">{t('Your uploaded files')}</h3>
+            <p className="mt-1 text-xs text-slate-600">{t(`${documents.length} ${documents.length === 1 ? 'file' : 'files'} in your private locker`)}</p>
+          </div>
+          {status === 'ready' && <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700"><ShieldCheck className="h-3.5 w-3.5" /> {t('Private storage connected')}</span>}
+        </div>
+
+        {status === 'ready' && documents.length === 0 ? (
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-blue-50/30 px-4 py-7 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-blue-100 bg-white"><Upload className="h-5 w-5 text-blue-500" aria-hidden="true" /></span>
+            <p className="mt-3 text-sm font-semibold text-slate-700">{t('No files added yet')}</p>
+            <p className="mt-1 text-xs text-slate-600">{t('Your uploads will appear here.')}</p>
+          </div>
+        ) : documents.length > 0 ? (
+          <ul className="space-y-3">
+            {documents.map(item => (
+              <li key={item.id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+                    {item.mime_type.startsWith('image/') ? <FileImage className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
+                    <p className="mt-1 break-words text-xs leading-relaxed text-slate-600">{t(documentTypeLabel(item.document_type))} · {formatFileSize(item.file_size_bytes)} · {new Date(item.created_at).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN')}</p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 pl-11 xl:pl-0">
+                  <button type="button" onClick={() => void handleDownload(item)} disabled={busyDocumentId === item.id} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                    {busyDocumentId === item.id ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ArrowDownToLine className="h-3.5 w-3.5" />}
+                    {t('Download')}
+                  </button>
+                  <button type="button" onClick={() => void handleDelete(item)} disabled={busyDocumentId === item.id} aria-label={`${t('Delete')} ${item.title}`} className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 p-2 text-rose-700 hover:bg-rose-50 disabled:opacity-50">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+        </div>
+      </div>
+    </div>
+  );
+}
