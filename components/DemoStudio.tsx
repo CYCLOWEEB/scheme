@@ -118,7 +118,7 @@ const ROUTE_LABELS = {
 export default function DemoStudio({ language, userProfile, setUserProfile, onGetSchemes, onLoadProfile, onSelectForCalculator, onSelectForLocator, onOpenDocuments, onAskAi, onOpenCalculator }: DemoStudioProps) {
   const [selectedScenarioId, setSelectedScenarioId] = useState(DEMO_SCENARIOS[0].id);
   const reducedMotion = useReducedMotion();
-  const { paused } = useExperienceMotion();
+  const { paused, lightweight } = useExperienceMotion();
   const personalized = isProfileReady(userProfile);
   const selectedScenario = DEMO_SCENARIOS.find(item => item.id === selectedScenarioId) ?? DEMO_SCENARIOS[0];
   const scenario = personalized && userProfile.projectTypeProvided
@@ -180,7 +180,7 @@ export default function DemoStudio({ language, userProfile, setUserProfile, onGe
                   <span className="flex items-center justify-between gap-2 text-sm font-bold leading-snug text-slate-900"><span>{tr(language, item.title)}</span><ArrowRight className={`hidden h-4 w-4 shrink-0 sm:block ${isSelected ? 'text-blue-600' : 'text-slate-400'}`} aria-hidden="true" /></span>
                   <span className="mt-1.5 text-xs leading-relaxed text-slate-500">{tr(language, item.subtitle)}</span>
                 </span>
-                {isSelected && <motion.span layoutId={reducedMotion || paused ? undefined : 'selected-goal'} transition={reducedMotion || paused ? { duration: 0 } : { type: 'spring', stiffness: 340, damping: 30 }} className="goal-selection absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm ring-2 ring-white"><CheckCircle2 className="h-4 w-4" aria-hidden="true" /></motion.span>}
+                {isSelected && <motion.span layoutId={reducedMotion || paused || lightweight ? undefined : 'selected-goal'} transition={reducedMotion || paused || lightweight ? { duration: 0 } : { type: 'spring', stiffness: 340, damping: 30 }} className="goal-selection absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm ring-2 ring-white"><CheckCircle2 className="h-4 w-4" aria-hidden="true" /></motion.span>}
               </button>
             );
           })}

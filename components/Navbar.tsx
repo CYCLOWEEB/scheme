@@ -40,7 +40,7 @@ export default function Navbar({
   onOpenProfile
 }: NavbarProps) {
   const reduceMotion = useReducedMotion();
-  const { paused } = useExperienceMotion();
+  const { paused, lightweight } = useExperienceMotion();
 
   const selectTab = (tab: NavbarProps['activeTab']) => {
     if (tab === 'profile') onOpenProfile();
@@ -74,6 +74,7 @@ export default function Navbar({
     }`;
 
   const navigationHighlight = (tab: NavbarProps['activeTab']) => activeTab === tab && (
+    lightweight ? <span aria-hidden="true" className="navigation-highlight" /> :
     <motion.span
       aria-hidden="true"
       className="navigation-highlight"

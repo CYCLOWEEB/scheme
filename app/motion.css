@@ -46,7 +46,7 @@
 
 /* Suspend decorative motion while the scene is offscreen. */
 .tab-panel.hidden .lens-scene *, .tab-panel.hidden .word-rise { animation-play-state: paused !important; }
-.app-shell[data-page-hidden='true'] *, .app-shell[data-hero-visible='false'] .lens-scene * { animation-play-state: paused !important; }
+.app-shell[data-page-hidden='true'] *, .app-shell[data-page-hidden='true'] *::before, .app-shell[data-page-hidden='true'] *::after, .app-shell[data-hero-visible='false'] .lens-scene * { animation-play-state: paused !important; }
 .app-shell[data-motion='paused'] *, .app-shell[data-motion='paused'] *::before, .app-shell[data-motion='paused'] *::after { animation: none !important; transition: none !important; }
 .app-shell[data-motion='paused'] .lens-scene-stage { transform: scale(1.04); }
 .app-shell[data-motion='paused'] :is(.word-rise, [data-reveal], .sample-match-content, .wizard-intro, .wizard-panel) { opacity: 1; transform: none; translate: none; }
@@ -78,4 +78,82 @@
   .header-controls > div { max-width: 68px; }
   .header-controls { gap: 3px; }
 }
+
+/* Keep in sync with LIGHTWEIGHT_MOTION_QUERY. CSS applies before hydration too.
+   Phones use brief opacity/transform feedback without large snapshots, glass
+   layers, per-word entrances, or scroll-triggered work. */
+@media (max-width: 767px), (hover: none), (pointer: coarse) {
+  .app-main { view-transition-name: none; }
+  .ambient-light { display: none; }
+  .app-shell .app-header,
+  .app-shell[data-scrolled='true'] .app-header {
+    background: #eff8fd;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: none;
+  }
+  .app-shell :is(.goal-section, .sample-results, .ai-toolkit, .wizard-panel, .wizard-intro, .profile-card, .agency-directory-panel) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .fluid-experience .header-accent::after,
+  .fluid-experience .fluid-card::before,
+  .fluid-experience .primary-cta::after,
+  .sample-results > .pointer-events-none { display: none; }
+  .lens-scene-stage { transform: none; transition: none; }
+  .lens-scene *, .intro-eyebrow > span { animation: none !important; }
+  .app-shell :is(.brand-lockup, .header-controls, .navigation-tab, .navigation-icon, .entry-icon, .header-accent, .header-notice, .app-footer, .intro-title, .intro-copy, .intro-action, .intro-badge, .word-rise) {
+    animation: none;
+    filter: none;
+    transform: none;
+    translate: none;
+    opacity: 1;
+  }
+  /* No content stays hidden waiting for a reveal observer on touch devices. */
+  .app-shell.fluid-experience [data-reveal] {
+    animation: none;
+    opacity: 1;
+    translate: none;
+    transform: none;
+  }
+  .fluid-experience .goal-image,
+  .fluid-experience .goal-card:is(:hover, [aria-pressed='true']) .goal-image {
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+  .app-shell :is(.button-motion, .fluid-card, .primary-cta, .primary-cta-arrow, .navigation-tab > span:last-child) {
+    transition-property: transform, opacity;
+    transition-duration: 120ms;
+    transition-delay: 0ms;
+  }
+  .app-shell .goal-card::after { transition-duration: 160ms; }
+  /* Touch hover can persist after lifting a finger. Keep feedback on :active. */
+  .app-shell :is(.button-motion:hover, .fluid-card:hover, .primary-cta:hover .primary-cta-arrow, .navigation-tab:hover > span:last-child),
+  .app-shell .goal-card:hover > span:nth-child(2) svg {
+    transform: none;
+    translate: none;
+  }
+  .app-shell .button-motion:active:not(:disabled),
+  .app-shell .fluid-card:active { transform: scale(.99); }
+
+  /* Animate one small launcher layer instead of repainting its SVG parts. */
+  .app-shell .scheme-bot-avatar * { animation: none !important; transition: none; }
+  .app-shell .scheme-bot-idle .scheme-bot-avatar { filter: none; transform: none; }
+  .app-shell .scheme-bot-stage { perspective: none; }
+  .app-shell .scheme-bot[data-animations='true'] .scheme-bot-stage::after { animation: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .app-shell .intro-editorial { animation: mobile-fade 180ms ease-out; }
+    .app-shell .navigation-highlight { animation: mobile-fade 140ms ease-out; }
+    html[data-section-navigation='mobile'] .fluid-experience .tab-panel:not(.hidden) { animation: mobile-fade 160ms ease-out; }
+    html[data-section-navigation] .intro-editorial { animation: none; }
+    .app-shell :is(.sample-match-content, .wizard-panel, .wizard-intro, .profile-card, .agency-directory-panel, .soft-arrive) { animation: mobile-fade 160ms ease-out; }
+    html[data-section-navigation] .tab-panel :is(.sample-match-content, .soft-arrive) { animation: none; }
+    .app-shell .match-progress { animation: rule-draw 200ms ease-out; }
+    .app-shell .scheme-bot[data-animations='true'][data-motion='idle'] .scheme-bot-launcher .scheme-bot-idle { animation: mobile-bot-float 4s ease-in-out infinite; }
+  }
+}
+@keyframes mobile-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mobile-bot-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @media print { .lens-scene { display: none !important; } }

@@ -2,10 +2,11 @@
 
 import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { MotionConfig } from 'motion/react';
+import { prefersLightweightMotion, serverLightweightMotion, subscribeLightweightMotion } from '@/lib/motion-preferences';
 
 const motionPreference = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const serverMotionPreference = () => false;
-const MotionControlsContext = createContext({ paused: false });
+const MotionControlsContext = createContext({ paused: false, lightweight: true });
 export const useExperienceMotion = () => useContext(MotionControlsContext);
 const subscribeMotionPreference = (onChange: () => void) => {
   const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -18,12 +19,14 @@ export default function FluidExperience({ children, activeView }: { children: Re
   const shellRef = useRef<HTMLDivElement>(null);
   const seen = useRef(new WeakSet<HTMLElement>());
   const systemReduced = useSyncExternalStore(subscribeMotionPreference, motionPreference, serverMotionPreference);
+  const lightweight = useSyncExternalStore(subscribeLightweightMotion, prefersLightweightMotion, serverLightweightMotion);
   const motionOff = systemReduced;
 
   useEffect(() => {
     const shell = shellRef.current;
     if (!shell) return;
     const header = shell.querySelector<HTMLElement>('.app-header');
+    const scene = shell.querySelector<HTMLElement>('.lens-scene-stage');
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const previousHeaderHeight = document.documentElement.style.getPropertyValue('--app-header-height');
     let scrollFrame = 0;
@@ -31,25 +34,39 @@ export default function FluidExperience({ children, activeView }: { children: Re
     let pointerTarget: HTMLElement | null = null;
     let pointerX = 0;
     let pointerY = 0;
+    let headerHeight = 0;
+    let scrollRange = 0;
+
+    // Geometry changes on resize/content changes, not on every scroll frame.
+    const measureLayout = () => {
+      const nextHeight = header?.offsetHeight ?? 0;
+      scrollRange = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      if (nextHeight !== headerHeight) {
+        headerHeight = nextHeight;
+        document.documentElement.style.setProperty('--app-header-height', `${headerHeight}px`);
+      }
+      if (!lightweight && !motionOff) scheduleScroll();
+    };
 
     const updateScroll = () => {
       scrollFrame = 0;
-      const headerHeight = header?.offsetHeight ?? 0;
-      const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
       const progress = scrollRange > 0 ? Math.max(0, Math.min(1, window.scrollY / scrollRange)) : 0;
-      shell.style.setProperty('--page-progress', String(progress));
-      shell.dataset.scrolled = String(window.scrollY > 20);
-      document.documentElement.style.setProperty('--app-header-height', `${headerHeight}px`);
-
-      if (!motionOff && finePointer.matches) {
-        shell.style.setProperty('--hero-drift', `${Math.min(window.scrollY * 0.13, 65)}px`);
-        shell.querySelectorAll<HTMLElement>('.tab-panel:not(.hidden) .goal-card').forEach(card => {
+      // Read all card bounds before writes, avoiding repeated forced layouts.
+      const cards = finePointer.matches
+        ? Array.from(shell.querySelectorAll<HTMLElement>('.tab-panel:not(.hidden) .goal-card')).map(card => {
           const bounds = card.getBoundingClientRect();
-          if (bounds.bottom > headerHeight && bounds.top < window.innerHeight) {
-            const offset = (window.innerHeight / 2 - bounds.top - bounds.height / 2) * 0.025;
-            card.style.setProperty('--image-scroll', `${Math.max(-7, Math.min(7, offset))}px`);
-          }
-        });
+          return { card, bounds };
+        }) : [];
+      // Keep per-frame custom properties off the root of the entire app.
+      header?.style.setProperty('--page-progress', String(progress));
+      const scrolled = String(window.scrollY > 20);
+      if (shell.dataset.scrolled !== scrolled) shell.dataset.scrolled = scrolled;
+      scene?.style.setProperty('--hero-drift', `${Math.min(window.scrollY * 0.13, 65)}px`);
+      for (const { card, bounds } of cards) {
+        if (bounds.bottom > headerHeight && bounds.top < window.innerHeight) {
+          const offset = (window.innerHeight / 2 - bounds.top - bounds.height / 2) * 0.025;
+          card.style.setProperty('--image-scroll', `${Math.max(-7, Math.min(7, offset))}px`);
+        }
       }
     };
     const scheduleScroll = () => {
@@ -64,10 +81,10 @@ export default function FluidExperience({ children, activeView }: { children: Re
     };
     const updatePointer = () => {
       pointerFrame = 0;
-      shell.style.setProperty('--camera-x', `${(pointerX / window.innerWidth - .5) * 22}px`);
-      shell.style.setProperty('--camera-y', `${(pointerY / window.innerHeight - .5) * 14}px`);
-      if (!pointerTarget) return;
-      const bounds = pointerTarget.getBoundingClientRect();
+      const bounds = pointerTarget?.getBoundingClientRect();
+      scene?.style.setProperty('--camera-x', `${(pointerX / window.innerWidth - .5) * 22}px`);
+      scene?.style.setProperty('--camera-y', `${(pointerY / window.innerHeight - .5) * 14}px`);
+      if (!pointerTarget || !bounds) return;
       const x = Math.max(0, Math.min(1, (pointerX - bounds.left) / bounds.width));
       const y = Math.max(0, Math.min(1, (pointerY - bounds.top) / bounds.height));
       pointerTarget.dataset.pointer = 'true';
@@ -118,7 +135,7 @@ export default function FluidExperience({ children, activeView }: { children: Re
       animation.onfinish = () => wave.remove();
       animation.oncancel = () => wave.remove();
     };
-    const resizeObserver = new ResizeObserver(scheduleScroll);
+    const resizeObserver = new ResizeObserver(measureLayout);
     const hero = shell.querySelector('.goal-intro');
     const heroObserver = new IntersectionObserver(entries => {
       shell.dataset.heroVisible = String(entries[0]?.isIntersecting ?? false);
@@ -129,19 +146,21 @@ export default function FluidExperience({ children, activeView }: { children: Re
     onVisibility();
     resizeObserver.observe(shell);
     if (header) resizeObserver.observe(header);
-    window.addEventListener('scroll', scheduleScroll, { passive: true });
-    window.addEventListener('resize', scheduleScroll, { passive: true });
-    shell.addEventListener('pointermove', onPointerMove, { passive: true });
-    shell.addEventListener('pointerdown', onPress, { passive: true });
-    shell.addEventListener('pointerleave', resetPointer);
-    window.addEventListener('blur', resetPointer);
-    scheduleScroll();
+    window.addEventListener('resize', measureLayout, { passive: true });
+    if (!lightweight && !motionOff) {
+      window.addEventListener('scroll', scheduleScroll, { passive: true });
+      shell.addEventListener('pointermove', onPointerMove, { passive: true });
+      shell.addEventListener('pointerdown', onPress, { passive: true });
+      shell.addEventListener('pointerleave', resetPointer);
+      window.addEventListener('blur', resetPointer);
+    }
+    measureLayout();
 
     return () => {
       window.cancelAnimationFrame(scrollFrame);
       window.cancelAnimationFrame(pointerFrame);
       window.removeEventListener('scroll', scheduleScroll);
-      window.removeEventListener('resize', scheduleScroll);
+      window.removeEventListener('resize', measureLayout);
       shell.removeEventListener('pointermove', onPointerMove);
       shell.removeEventListener('pointerdown', onPress);
       shell.removeEventListener('pointerleave', resetPointer);
@@ -150,16 +169,18 @@ export default function FluidExperience({ children, activeView }: { children: Re
       heroObserver.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       resetPointer();
-      ['--camera-x', '--camera-y', '--hero-drift'].forEach(property => shell.style.removeProperty(property));
+      ['--camera-x', '--camera-y', '--hero-drift'].forEach(property => scene?.style.removeProperty(property));
+      header?.style.removeProperty('--page-progress');
+      delete shell.dataset.scrolled;
       shell.querySelectorAll<HTMLElement>('.goal-card').forEach(card => card.style.removeProperty('--image-scroll'));
       shell.querySelectorAll('.tap-wave').forEach(wave => wave.remove());
       document.documentElement.style.setProperty('--app-header-height', previousHeaderHeight);
     };
-  }, [motionOff]);
+  }, [motionOff, lightweight]);
 
   useEffect(() => {
     const shell = shellRef.current;
-    if (!shell || motionOff || !('IntersectionObserver' in window)) return;
+    if (!shell || motionOff || lightweight || !('IntersectionObserver' in window)) return;
     const targets = new Set<HTMLElement>();
     let registerFrame = 0;
     const observer = new IntersectionObserver(entries => {
@@ -222,11 +243,11 @@ export default function FluidExperience({ children, activeView }: { children: Re
         target.style.removeProperty('--viewport-delay');
       });
     };
-  }, [activeView, motionOff]);
+  }, [activeView, motionOff, lightweight]);
 
   return (
     <MotionConfig reducedMotion={motionOff ? 'always' : 'user'} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}>
-      <MotionControlsContext.Provider value={{ paused: motionOff }}>
+      <MotionControlsContext.Provider value={{ paused: motionOff, lightweight }}>
       <div ref={shellRef} className="app-shell fluid-experience min-h-screen flex flex-col text-slate-900" data-view={activeView} data-motion={motionOff ? 'paused' : 'active'}>
         <div className="ambient-light" aria-hidden="true"><div className="ambient-wash" /><div className="ambient-grid" /></div>
         {children}

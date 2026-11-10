@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { LIGHTWEIGHT_MOTION_QUERY, prefersLightweightMotion } from './motion-preferences';
 
 export type SectionView = 'showcase' | 'wizard' | 'calculator' | 'locator' | 'documents' | 'upload' | 'profile';
 
@@ -19,6 +20,7 @@ export function useSectionNavigation(initialView: SectionView = 'showcase') {
     requestedView.current = next;
     const id = ++requestId.current;
     transitionRef.current?.skipTransition();
+    transitionRef.current = null;
 
     const update = () => {
       // A skipped transition may still invoke its update. Only the latest tap wins.
@@ -35,8 +37,10 @@ export function useSectionNavigation(initialView: SectionView = 'showcase') {
 
     const motionOff = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       || document.querySelector('.app-shell')?.getAttribute('data-motion') === 'paused';
-    if (!document.startViewTransition || motionOff) {
-      document.documentElement.dataset.sectionNavigation = motionOff ? 'instant' : 'fallback';
+    const lightweight = prefersLightweightMotion();
+    // Long page snapshots compete with scrolling for memory on phones.
+    if (!document.startViewTransition || motionOff || lightweight) {
+      document.documentElement.dataset.sectionNavigation = motionOff ? 'instant' : lightweight ? 'mobile' : 'fallback';
       delete document.documentElement.dataset.sectionTransition;
       update();
       return;
@@ -60,8 +64,9 @@ export function useSectionNavigation(initialView: SectionView = 'showcase') {
   useEffect(() => {
     const requests = requestId;
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const lightweight = window.matchMedia(LIGHTWEIGHT_MOTION_QUERY);
     const stop = () => {
-      if (media.matches || document.querySelector('.app-shell')?.getAttribute('data-motion') === 'paused') {
+      if (media.matches || lightweight.matches || document.querySelector('.app-shell')?.getAttribute('data-motion') === 'paused') {
         transitionRef.current?.skipTransition();
       }
     };
@@ -69,9 +74,11 @@ export function useSectionNavigation(initialView: SectionView = 'showcase') {
     const shell = document.querySelector('.app-shell');
     if (shell) observer.observe(shell, { attributes: true, attributeFilter: ['data-motion'] });
     media.addEventListener('change', stop);
+    lightweight.addEventListener('change', stop);
     return () => {
       observer.disconnect();
       media.removeEventListener('change', stop);
+      lightweight.removeEventListener('change', stop);
       ++requests.current;
       transitionRef.current?.skipTransition();
       delete document.documentElement.dataset.sectionTransition;

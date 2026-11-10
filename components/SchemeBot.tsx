@@ -6,6 +6,7 @@ import type { UserProfile } from '@/lib/types';
 import { tr } from '@/lib/ui-copy';
 import SchemeBotAvatar, { type SchemeBotActivity } from '@/components/SchemeBotAvatar';
 import VoiceAIAssistant from '@/components/VoiceAIAssistant';
+import { useExperienceMotion } from '@/components/FluidExperience';
 
 interface SchemeBotProps {
   language: string;
@@ -42,8 +43,10 @@ export default function SchemeBot({ language, currentSchemeName, userProfile, is
   const [isLanding, setIsLanding] = useState(false);
   const [activity, setActivity] = useState<SchemeBotActivity>('idle');
   const visibleActivity = isOpen ? activity : 'idle';
+  const { paused, lightweight } = useExperienceMotion();
 
   useEffect(() => {
+    if (paused || lightweight) return;
     const pointer = window.matchMedia('(pointer: fine)');
     let frame = 0;
     let pointerX = 0;
@@ -88,7 +91,7 @@ export default function SchemeBot({ language, currentSchemeName, userProfile, is
       document.documentElement.removeEventListener('pointerleave', resetLook);
       pointer.removeEventListener('change', resetLook);
     };
-  }, []);
+  }, [paused, lightweight]);
 
   useEffect(() => () => {
     if (landingTimeoutRef.current !== null) window.clearTimeout(landingTimeoutRef.current);
@@ -97,6 +100,10 @@ export default function SchemeBot({ language, currentSchemeName, userProfile, is
   const updateLayout = useCallback((nextPosition?: BotPosition) => {
     const bot = botRef.current;
     if (!bot) return;
+    const panel = panelRef.current;
+    // An untouched, closed launcher is already positioned by CSS. Mobile
+    // browser chrome changes must not force a layout read on every scroll.
+    if (!nextPosition && !positionRef.current && (!panel || panel.hidden)) return;
 
     const viewport = window.visualViewport;
     const edge = 16;
@@ -116,7 +123,6 @@ export default function SchemeBot({ language, currentSchemeName, userProfile, is
       bot.style.bottom = 'auto';
     }
 
-    const panel = panelRef.current;
     if (!panel || panel.hidden) return;
 
     // Keep the conversation visible even when the launcher is near a screen edge.
@@ -142,8 +148,14 @@ export default function SchemeBot({ language, currentSchemeName, userProfile, is
   }, []);
 
   useLayoutEffect(() => {
-    const syncLayout = () => updateLayout();
-    syncLayout();
+    let frame = 0;
+    const syncLayout = () => {
+      if (!frame) frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        updateLayout();
+      });
+    };
+    updateLayout();
 
     const observer = new ResizeObserver(syncLayout);
     if (botRef.current) observer.observe(botRef.current);
@@ -153,6 +165,7 @@ export default function SchemeBot({ language, currentSchemeName, userProfile, is
     window.visualViewport?.addEventListener('scroll', syncLayout);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener('resize', syncLayout);
       window.visualViewport?.removeEventListener('resize', syncLayout);

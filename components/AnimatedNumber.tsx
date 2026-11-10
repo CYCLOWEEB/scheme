@@ -10,21 +10,21 @@ export default function AnimatedNumber({ value, format = String, className }: { 
   const previous = useRef(0);
   const inView = useInView(ref, { once: true });
   const reducedMotion = useReducedMotion();
-  const { paused } = useExperienceMotion();
+  const { paused, lightweight } = useExperienceMotion();
   const counter = useMotionValue(value);
   const text = useTransform(counter, current => format(Math.round(current)));
 
   useEffect(() => {
-    if (reducedMotion || paused || !inView) {
+    if (reducedMotion || paused || lightweight || !inView) {
       counter.set(value);
-      if (reducedMotion || paused) previous.current = value;
+      if (reducedMotion || paused || lightweight) previous.current = value;
       return;
     }
     counter.set(previous.current);
     const animation = animate(counter, value, { duration: 0.85, ease: [0.22, 1, 0.36, 1] });
     previous.current = value;
     return () => animation.stop();
-  }, [counter, inView, reducedMotion, paused, value]);
+  }, [counter, inView, reducedMotion, paused, lightweight, value]);
 
   return <span ref={ref} className={className} aria-label={format(value)}><motion.span aria-hidden="true">{text}</motion.span></span>;
 }
